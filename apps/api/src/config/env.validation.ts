@@ -1,6 +1,8 @@
 import 'reflect-metadata';
-import { plainToInstance, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
+  IsArray,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -32,6 +34,20 @@ export class EnvironmentVariables {
   @Min(1)
   @Max(65535)
   PORT: number = 3000;
+
+  /** Comma-separated list of origins allowed to call the API from a browser. */
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string'
+      ? value
+          .split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean)
+      : value,
+  )
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsUrl({ require_tld: false, require_protocol: true }, { each: true })
+  CORS_ORIGINS: string[] = ['http://localhost:5173'];
 
   @IsString()
   @MinLength(32)
