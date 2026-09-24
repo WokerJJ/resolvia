@@ -143,3 +143,4 @@ Al final de cada día, anota una línea aquí (o en el tablero de GitHub). Sirve
 |---|---|---|---|
 | 1 | 24/09 | Entorno instalado, bootstrap, Prisma 7, ADR 0002, plan diario, e2e en la CI, commits en `develop` | `gh auth login`, push de `develop`, WSL2 |
 | 2 | 24/09 | Adelantado: WSL2 y Docker, migración `init` con pgvector, `ConfigModule` validado, `PrismaService` con `PrismaPg`, generador ESM `prisma-client` (ADR 0003), `typecheck` en la CI. PostgreSQL local en el 5432 → contenedor en el 5433. | PR `feat/prisma-setup` → `develop` |
+| 3 | 24/09 | Adelantado (código): `configureApp` compartido por `main.ts` y las e2e, `ValidationPipe` global, Swagger en `/api/docs`, CORS con `CORS_ORIGINS` validado, `GET /api/health` (503 si la base de datos no responde). | Organización en GitHub: milestones, labels, tablero, issues y protección de `main` |

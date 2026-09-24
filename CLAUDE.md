@@ -81,6 +81,6 @@ cd apps/api && npm run start:dev
 ## Estado actual
 
 - Fase actual: **Fase 1 — MVP del backend** (ver `docs/roadmap.md`).
-- Hecho: estructura del repo, documentación, API y web generadas, Prisma 7 con migración inicial (ADR 0003), `ConfigModule` con variables validadas y `PrismaService`, CI en verde con Node 24.
-- Siguiente: día 3 de `docs/plan-diario.md` (configuración base de la API: validación global, Swagger, CORS y endpoint de salud).
+- Hecho: estructura del repo, documentación, API y web generadas, Prisma 7 con migración inicial (ADR 0003), `ConfigModule` con variables validadas, `PrismaService`, configuración HTTP común (`src/app.setup.ts`: prefijo `/api`, validación global, CORS, Swagger en `/api/docs`) y `GET /api/health`. CI en verde con Node 24.
+- Siguiente: día 4 de `docs/plan-diario.md` (módulo `users`). Las e2e usan `test/utils/create-test-app.ts`, que aplica `configureApp` igual que `main.ts`.
 - Local: si ya hay otro PostgreSQL en el puerto 5432, usa `POSTGRES_PORT=5433` en el `.env` (y el mismo puerto en `DATABASE_URL`).
