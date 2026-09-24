@@ -1,0 +1,6 @@
+# Finales de línea LF en el repositorio para que Windows y la CI (Linux) coincidan
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.pdf binary
