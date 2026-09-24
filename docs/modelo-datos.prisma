@@ -2,8 +2,11 @@
 // El script scripts/bootstrap.sh lo copia a apps/api/prisma/schema.prisma.
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+  previewFeatures     = ["postgresqlExtensions"]
 }
 
 datasource db {
