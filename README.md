@@ -131,14 +131,14 @@ docker compose exec ollama ollama pull nomic-embed-text
 
 ## Hoja de ruta
 
-El desarrollo avanza por fases, cada una entregable por sí misma. El detalle está en [docs/roadmap.md](docs/roadmap.md).
+El desarrollo avanza por fases, cada una entregable por sí misma. El detalle está en [docs/roadmap.md](docs/roadmap.md) y el calendario día a día en [docs/plan-diario.md](docs/plan-diario.md).
 
 1. **MVP:** autenticación, tickets, pruebas e integración continua
 2. **Web:** tablero para técnicos
 3. **IA I:** clasificación automática de tickets
 4. **IA II:** base de conocimiento y sugerencias con RAG
-5. **Móvil:** app Flutter para usuarios
-6. **Nube:** despliegue en AWS
+5. **Nube:** métricas y despliegue en AWS
+6. **Móvil:** app Flutter para usuarios
 
 ## Autor
 

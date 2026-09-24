@@ -31,14 +31,14 @@ Cada fase termina con algo funcional y demostrable. Marca las tareas a medida qu
 - [ ] Sugerencia de respuesta con fuentes citadas
 - [ ] Valoración de utilidad por parte del técnico
 
-## Fase 5 — App móvil
-- [ ] Generar la app con Flutter
-- [ ] Inicio de sesión y almacenamiento seguro del token
-- [ ] Crear tickets y consultar su estado
-
-## Fase 6 — Nube y métricas
+## Fase 5 — Nube y métricas
 - [ ] Tablero de métricas en la web
 - [ ] Alerta de facturación en AWS (antes de crear cualquier recurso)
 - [ ] Base de datos en RDS y documentos en S3
 - [ ] Despliegue de la API (EC2 o ECS) y de la web
 - [ ] Despliegue continuo desde GitHub Actions
+
+## Fase 6 — App móvil
+- [ ] Generar la app con Flutter
+- [ ] Inicio de sesión y almacenamiento seguro del token
+- [ ] Crear tickets y consultar su estado
