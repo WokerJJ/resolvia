@@ -65,6 +65,10 @@ jobs:
         if: steps.check.outputs.exists == 'true'
         run: npm test --if-present -- --coverage
 
+      - name: Pruebas e2e
+        if: steps.check.outputs.exists == 'true'
+        run: npm run test:e2e --if-present
+
       - name: Build
         if: steps.check.outputs.exists == 'true'
         run: npm run build --if-present
