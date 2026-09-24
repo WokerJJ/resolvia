@@ -57,6 +57,10 @@ jobs:
         if: steps.check.outputs.exists == 'true'
         run: npm run lint --if-present
 
+      - name: Tipos
+        if: steps.check.outputs.exists == 'true'
+        run: npm run typecheck
+
       - name: Migraciones de base de datos
         if: steps.check.outputs.exists == 'true' && hashFiles('apps/api/prisma/schema.prisma') != ''
         run: npx prisma migrate deploy
