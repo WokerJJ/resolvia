@@ -20,6 +20,24 @@ describe('validateEnv', () => {
     expect(env.PORT).toBe(4000);
   });
 
+  it('parses CORS_ORIGINS as a comma-separated list', () => {
+    const env = validateEnv({
+      ...validEnv,
+      CORS_ORIGINS: 'http://localhost:5173, https://resolvia.example.com',
+    });
+
+    expect(env.CORS_ORIGINS).toEqual([
+      'http://localhost:5173',
+      'https://resolvia.example.com',
+    ]);
+  });
+
+  it('fails when a CORS origin is not a URL', () => {
+    expect(() =>
+      validateEnv({ ...validEnv, CORS_ORIGINS: 'not-a-url' }),
+    ).toThrow(/CORS_ORIGINS/);
+  });
+
   it('fails when DATABASE_URL is missing', () => {
     expect(() => validateEnv({ JWT_SECRET: validEnv.JWT_SECRET })).toThrow(
       /DATABASE_URL/,
@@ -40,7 +58,11 @@ describe('validateEnv', () => {
 
   it('requires ANTHROPIC_API_KEY only when the provider is anthropic', () => {
     expect(() =>
-      validateEnv({ ...validEnv, LLM_PROVIDER: 'ollama', ANTHROPIC_API_KEY: '' }),
+      validateEnv({
+        ...validEnv,
+        LLM_PROVIDER: 'ollama',
+        ANTHROPIC_API_KEY: '',
+      }),
     ).not.toThrow();
     expect(() =>
       validateEnv({
