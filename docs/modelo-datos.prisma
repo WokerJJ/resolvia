@@ -1,0 +1,126 @@
+// Modelo de datos inicial de Resolvia.
+// El script scripts/bootstrap.sh lo copia a apps/api/prisma/schema.prisma.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+enum Role {
+  USER
+  TECHNICIAN
+  ADMIN
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketCategory {
+  NETWORK
+  HARDWARE
+  SOFTWARE
+  ACCOUNTS
+  OTHER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ticketsCreated  Ticket[]            @relation("CreatedTickets")
+  ticketsAssigned Ticket[]            @relation("AssignedTickets")
+  comments        Comment[]
+  documents       KnowledgeDocument[]
+}
+
+model Ticket {
+  id          String          @id @default(uuid())
+  title       String
+  description String
+  status      TicketStatus    @default(OPEN)
+  priority    TicketPriority?
+  category    TicketCategory?
+
+  // Resultado de la clasificación automática (se guarda aparte para medir su precisión)
+  aiCategory   TicketCategory?
+  aiPriority   TicketPriority?
+  aiConfidence Float?
+
+  createdById  String
+  createdBy    User    @relation("CreatedTickets", fields: [createdById], references: [id])
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id])
+
+  comments      Comment[]
+  aiSuggestions AiSuggestion[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  body      String
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model AiSuggestion {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  content   String
+  sources   Json // fragmentos de documentos usados como contexto (RAG)
+  model     String // proveedor y modelo que generó la sugerencia
+  helpful   Boolean? // valoración del técnico, alimenta las métricas
+  createdAt DateTime @default(now())
+}
+
+model KnowledgeDocument {
+  id           String          @id @default(uuid())
+  title        String
+  storageKey   String // ruta local o clave en S3
+  uploadedById String
+  uploadedBy   User            @relation(fields: [uploadedById], references: [id])
+  chunks       DocumentChunk[]
+  createdAt    DateTime        @default(now())
+}
+
+model DocumentChunk {
+  id         String                      @id @default(uuid())
+  documentId String
+  document   KnowledgeDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String
+  position   Int
+  embedding  Unsupported("vector(768)")? // nomic-embed-text genera vectores de 768 dimensiones
+}
