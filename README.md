@@ -85,7 +85,7 @@ El módulo de IA se construye sobre una interfaz `LLMProvider` con dos implement
 | Frontend web | React, TypeScript, Vite |
 | Móvil | Flutter, Dart |
 | Inteligencia artificial | Ollama (modelos locales), API de LLM externa, embeddings, RAG |
-| Pruebas | Jest, Supertest |
+| Pruebas | Vitest, Supertest |
 | Infraestructura | Docker, Docker Compose, GitHub Actions (CI/CD), AWS |
 
 ## Estructura del repositorio
