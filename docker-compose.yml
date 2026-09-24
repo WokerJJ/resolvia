@@ -1,0 +1,33 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: resolvia-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-resolvia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resolvia_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-resolvia}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-resolvia}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Modelo de IA local. Se levanta solo con: docker compose --profile ai up -d
+  ollama:
+    image: ollama/ollama:latest
+    container_name: resolvia-ollama
+    profiles: ["ai"]
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  db_data:
+  ollama_data:
