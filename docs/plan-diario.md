@@ -11,7 +11,7 @@ Plan día a día para llevar Resolvia desde el estado actual hasta la versión *
 
 1. Se parte de `develop` actualizado y se crea (o se retoma) la rama del día: `feat/<nombre>`, `fix/<nombre>`, `docs/<nombre>` o `ci/<nombre>`.
 2. Se hacen **commits pequeños y convencionales en español**, como mínimo uno al día (el historial también es parte del portafolio).
-3. Antes de cerrar el día en `apps/api` deben pasar `npm run lint`, `npm test`, `npm run test:e2e` y `npm run build`.
+3. Antes de cerrar el día en `apps/api` deben pasar `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:e2e` y `npm run build`.
 4. Cuando la funcionalidad está completa se abre un **Pull Request hacia `develop`** que enlaza su issue (`Closes #N`). Se integra solo con la CI en verde.
 5. Al cerrar cada fase: se marcan las casillas de `roadmap.md`, se abre un PR `develop → main`, se crea un **tag** y un **GitHub Release** con notas y capturas.
 
@@ -43,7 +43,7 @@ Plan día a día para llevar Resolvia desde el estado actual hasta la versión *
 | Día | Fecha | Rama | Tareas | Commits sugeridos |
 |---|---|---|---|---|
 | 1 | jue 24/09 | `develop` | ✅ Entorno instalado (Git, Node, gh, Docker), repo clonado, bootstrap de `apps/api` y `apps/web`, Prisma 7 fijado, ADR 0002. Pendiente: `git config` con tu nombre y correo, `gh auth login`, commits y push de `develop`. | `chore: generar apps/api y apps/web con el bootstrap` · `fix: adaptar el schema a Prisma 7 con prisma.config.ts` · `docs: ADR 0002 Vitest y oxlint` · `ci: ejecutar pruebas e2e de la API` |
-| 2 | vie 25/09 | `feat/prisma-setup` | Instalar WSL2 y reiniciar. `docker compose up -d db`. Migración `init` y comprobar que se crea la extensión `vector`. `ConfigModule` global que lee el `.env` raíz y valida las variables. `PrismaModule` / `PrismaService` con `@prisma/adapter-pg`. | `chore: migración inicial de la base de datos` · `feat: módulo de configuración con validación de variables` · `feat: PrismaService con adaptador pg` |
+| 2 | vie 25/09 | `feat/prisma-setup` | ✅ Instalar WSL2 y reiniciar. `docker compose up -d db`. Migración `init` y comprobar que se crea la extensión `vector`. `ConfigModule` global que lee el `.env` raíz y valida las variables. `PrismaModule` / `PrismaService` con `@prisma/adapter-pg`. | `chore: migración inicial de la base de datos` · `feat: módulo de configuración con validación de variables` · `feat: PrismaService con adaptador pg` |
 
 ## Fase 1 — Backend MVP (días 3–13) · milestone → `v0.1.0`
 
@@ -53,7 +53,7 @@ Plan día a día para llevar Resolvia desde el estado actual hasta la versión *
 | 4 | mar 29/09 | `feat/users` | Módulo `users`: interfaz `UsersRepository` + `PrismaUsersRepository`, `UsersService` (crear usuario con hash bcrypt, buscar por correo). Pruebas unitarias con repositorio simulado. | `feat: módulo users con repositorio` · `test: pruebas unitarias de UsersService` |
 | 5 | mié 30/09 | `feat/auth` | `POST /auth/register` y `POST /auth/login`: DTOs, `AuthService`, emisión de JWT, errores 401/409 claros. Pruebas unitarias. | `feat: registro e inicio de sesión con JWT` · `test: pruebas unitarias de AuthService` |
 | 6 | jue 01/10 | `feat/auth` | `JwtStrategy`, `JwtAuthGuard`, `RolesGuard` + decorador `@Roles()`, decorador `@CurrentUser()`, `GET /auth/me`. e2e de registro, login y acceso por rol. PR → `develop`. | `feat: guards de autenticación y roles` · `test: e2e del flujo de autenticación` |
-| 7 | vie 02/10 | `feat/seed` | Script `prisma db seed` (admin, técnico y usuario de prueba). ADR 0003: autenticación con JWT sin estado + bcrypt (por qué y límites, por ejemplo la revocación). Día de margen para ponerse al día. | `feat: datos semilla para desarrollo` · `docs: ADR 0003 autenticación con JWT` |
+| 7 | vie 02/10 | `feat/seed` | Script `prisma db seed` (admin, técnico y usuario de prueba). ADR 0004: autenticación con JWT sin estado + bcrypt (por qué y límites, por ejemplo la revocación). Día de margen para ponerse al día. | `feat: datos semilla para desarrollo` · `docs: ADR 0004 autenticación con JWT` |
 | 8 | lun 05/10 | `feat/tickets` | Módulo `tickets`: repositorio, `POST /tickets` (el usuario crea el suyo), `GET /tickets` (USER ve los suyos; TECHNICIAN y ADMIN ven todos). Pruebas unitarias. | `feat: crear y listar tickets según rol` · `test: pruebas unitarias de TicketsService` |
 | 9 | mar 06/10 | `feat/tickets` | `GET /tickets/:id` con control de acceso, filtros por estado, prioridad y categoría, paginación (`page`, `limit`) con DTO de consulta. | `feat: detalle, filtros y paginación de tickets` · `test: filtros de tickets` |
 | 10 | mié 07/10 | `feat/tickets-workflow` | Asignación (ADMIN asigna a un TECHNICIAN). Cambio de estado con **transiciones válidas** (máquina de estados como función pura, fácil de probar). | `feat: asignación de tickets` · `feat: transiciones de estado validadas` · `test: máquina de estados de tickets` |
@@ -65,7 +65,7 @@ Plan día a día para llevar Resolvia desde el estado actual hasta la versión *
 
 | Día | Fecha | Rama | Tareas | Commits sugeridos |
 |---|---|---|---|---|
-| 14 | mié 14/10 | `feat/web-setup` | React Router, TanStack Query, cliente HTTP tipado con `VITE_API_URL`, Vitest + Testing Library. ADR 0004: librería de UI y estilos (por ejemplo Tailwind + shadcn/ui). El job `web` de la CI empieza a ejecutarse. | `chore: configurar router, consultas y pruebas en la web` · `docs: ADR 0004 librería de UI` |
+| 14 | mié 14/10 | `feat/web-setup` | React Router, TanStack Query, cliente HTTP tipado con `VITE_API_URL`, Vitest + Testing Library. ADR 0005: librería de UI y estilos (por ejemplo Tailwind + shadcn/ui). El job `web` de la CI empieza a ejecutarse. | `chore: configurar router, consultas y pruebas en la web` · `docs: ADR 0005 librería de UI` |
 | 15 | jue 15/10 | `feat/web-auth` | Página de login, contexto de sesión, manejo del token y cierre de sesión. | `feat: inicio de sesión en la web` · `test: formulario de login` |
 | 16 | vie 16/10 | `feat/web-auth` | Rutas protegidas por rol, layout (barra lateral y encabezado), página 404. | `feat: rutas protegidas por rol y layout` |
 | 17 | lun 19/10 | `feat/web-inbox` | Bandeja de tickets: tabla con paginación, estados de carga, error y vacío. | `feat: bandeja de tickets` |
@@ -81,7 +81,7 @@ Plan día a día para llevar Resolvia desde el estado actual hasta la versión *
 |---|---|---|---|---|
 | 23 | mar 27/10 | `feat/ai-provider` | `docker compose --profile ai up -d`, descargar `llama3.2:3b` y `nomic-embed-text`. Módulo `ai`: interfaz `LLMProvider`, token de inyección elegido por `LLM_PROVIDER`, `FakeLLMProvider` para pruebas. | `feat: interfaz LLMProvider e inyección por configuración` · `test: proveedor simulado` |
 | 24 | mié 28/10 | `feat/ai-ollama` | `OllamaProvider.classify`: prompt, respuesta en JSON, validación con zod, reintento y valor por defecto si el modelo responde mal. `AnthropicProvider` con el SDK oficial y el cliente simulado en las pruebas. | `feat: OllamaProvider y AnthropicProvider para clasificar` · `test: validación de la respuesta del modelo` |
-| 25 | jue 29/10 | `feat/ai-classify-ticket` | Clasificar al crear un ticket **sin bloquear la creación** (evento asíncrono) y guardar en `AiSuggestion` la categoría, prioridad y confianza. ADR 0005: clasificación síncrona o asíncrona. | `feat: clasificación automática al crear un ticket` · `docs: ADR 0005 clasificación asíncrona` |
+| 25 | jue 29/10 | `feat/ai-classify-ticket` | Clasificar al crear un ticket **sin bloquear la creación** (evento asíncrono) y guardar en `AiSuggestion` la categoría, prioridad y confianza. ADR 0006: clasificación síncrona o asíncrona. | `feat: clasificación automática al crear un ticket` · `docs: ADR 0006 clasificación asíncrona` |
 | 26 | vie 30/10 | `feat/web-ai-classification` | En la web, mostrar la sugerencia de la IA con su confianza; el técnico la acepta o la corrige (*la IA sugiere, la persona decide*). | `feat: aceptar o corregir la clasificación de la IA` |
 | 27 | mar 03/11 | `docs/evaluacion-ia` | Conjunto de ~30 tickets de ejemplo y script que mide la precisión de Ollama frente a Anthropic. Resultados en `docs/evaluacion-ia.md`. Tag **`v0.3.0`**. | `feat: script de evaluación de la clasificación` · `docs: resultados de la evaluación de IA` |
 
@@ -110,10 +110,10 @@ Plan día a día para llevar Resolvia desde el estado actual hasta la versión *
 | 39 | vie 20/11 | `feat/metrics` | Módulo `metrics`: tickets por estado, tiempo medio de resolución, precisión de la clasificación y porcentaje de sugerencias útiles. | `feat: endpoints de métricas` · `test: consultas de métricas` |
 | 40 | lun 23/11 | `feat/web-dashboard` | Tablero de métricas en la web con gráficos. | `feat: tablero de métricas` |
 | 41 | mar 24/11 | `feat/docker-images` | Dockerfile multi-etapa de la API y de la web; `docker compose` con el stack completo; *health checks*. | `chore: imágenes Docker de la API y la web` |
-| 42 | mié 25/11 | `docs/aws` | Cuenta de AWS con MFA, usuario IAM sin permisos de root y **presupuesto con alerta de facturación**. Documentar en `docs/despliegue.md`. ADR 0006: EC2 o ECS. | `docs: preparación de la cuenta de AWS` · `docs: ADR 0006 estrategia de despliegue` |
+| 42 | mié 25/11 | `docs/aws` | Cuenta de AWS con MFA, usuario IAM sin permisos de root y **presupuesto con alerta de facturación**. Documentar en `docs/despliegue.md`. ADR 0007: EC2 o ECS. | `docs: preparación de la cuenta de AWS` · `docs: ADR 0007 estrategia de despliegue` |
 | 43 | jue 26/11 | `feat/aws-rds` | RDS PostgreSQL (capa gratuita) con la extensión `vector`, `prisma migrate deploy`, secretos en SSM Parameter Store. | `docs: base de datos en RDS` |
 | 44 | vie 27/11 | `feat/storage-s3` | Implementación `S3StorageService` de la interfaz de almacenamiento, elegida por configuración. | `feat: almacenamiento de documentos en S3` · `test: StorageService de S3 simulado` |
-| 45 | lun 30/11 | `feat/deploy-api` | Despliegue de la API (EC2 o ECS según el ADR 0006), HTTPS y variables desde SSM. | `chore: despliegue de la API en AWS` |
+| 45 | lun 30/11 | `feat/deploy-api` | Despliegue de la API (EC2 o ECS según el ADR 0007), HTTPS y variables desde SSM. | `chore: despliegue de la API en AWS` |
 | 46 | mar 01/12 | `feat/deploy-web` | Web en S3 + CloudFront, CORS con el dominio real. | `chore: despliegue de la web en AWS` |
 | 47 | mié 02/12 | `ci/deploy` | Despliegue continuo con GitHub Actions usando **OIDC** (sin claves de AWS guardadas en el repositorio): push a `main` → build → deploy. | `ci: despliegue continuo a AWS con OIDC` |
 | 48 | jue 03/12 | `docs/fase-5` | Guía para apagar recursos y evitar costos, URL de la demo en el README. Tag **`v0.5.0`**. | `docs: guía de despliegue y cierre de fase 5` |
@@ -123,7 +123,7 @@ Plan día a día para llevar Resolvia desde el estado actual hasta la versión *
 | Día | Fecha | Rama | Tareas | Commits sugeridos |
 |---|---|---|---|---|
 | 49 | vie 04/12 | `chore/mobile-setup` | Instalar Flutter SDK y Android Studio con emulador (`flutter doctor` en verde). Ejecutar el bootstrap para generar `apps/mobile`. Job de la CI con `flutter analyze` y `flutter test`. | `chore: generar la app móvil con Flutter` · `ci: análisis y pruebas de Flutter` |
-| 50 | lun 07/12 | `feat/mobile-base` | Estructura por capas, gestor de estado (ADR 0007: Riverpod o Bloc), cliente HTTP (dio) y URL base por entorno. | `feat: estructura base de la app móvil` · `docs: ADR 0007 gestión de estado en Flutter` |
+| 50 | lun 07/12 | `feat/mobile-base` | Estructura por capas, gestor de estado (ADR 0008: Riverpod o Bloc), cliente HTTP (dio) y URL base por entorno. | `feat: estructura base de la app móvil` · `docs: ADR 0008 gestión de estado en Flutter` |
 | 51 | mié 09/12 | `feat/mobile-auth` | Login y guardado seguro del token con `flutter_secure_storage`; cierre de sesión. | `feat: inicio de sesión en la app móvil` · `test: pruebas del repositorio de autenticación` |
 | 52 | jue 10/12 | `feat/mobile-tickets` | Lista de "mis tickets" con su estado y *pull to refresh*. | `feat: listado de tickets en móvil` |
 | 53 | vie 11/12 | `feat/mobile-tickets` | Crear ticket y ver la clasificación sugerida por la IA. | `feat: crear tickets desde el móvil` |
@@ -142,3 +142,4 @@ Al final de cada día, anota una línea aquí (o en el tablero de GitHub). Sirve
 | Día | Fecha real | Hecho | Pendiente / bloqueos |
 |---|---|---|---|
 | 1 | 24/09 | Entorno instalado, bootstrap, Prisma 7, ADR 0002, plan diario, e2e en la CI, commits en `develop` | `gh auth login`, push de `develop`, WSL2 |
+| 2 | 24/09 | Adelantado: WSL2 y Docker, migración `init` con pgvector, `ConfigModule` validado, `PrismaService` con `PrismaPg`, generador ESM `prisma-client` (ADR 0003), `typecheck` en la CI. PostgreSQL local en el 5432 → contenedor en el 5433. | PR `feat/prisma-setup` → `develop` |

@@ -53,7 +53,7 @@ Repositorio: https://github.com/WokerJJ/resolvia
 - Unitarias en `*.spec.ts` junto al código (`npm test`); e2e en `apps/api/test/*.e2e-spec.ts` (`npm run test:e2e`).
 - Mocks con la API de Vitest (`vi.fn()`, `vi.spyOn()`), no la de Jest.
 - Las pruebas nunca llaman a un LLM real: usan un `LLMProvider` simulado.
-- Antes de dar una tarea por terminada: `npm run lint`, `npm test`, `npm run test:e2e` y `npm run build` deben pasar en `apps/api`.
+- Antes de dar una tarea por terminada: `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:e2e` y `npm run build` deben pasar en `apps/api`.
 
 ## Git
 
@@ -81,5 +81,6 @@ cd apps/api && npm run start:dev
 ## Estado actual
 
 - Fase actual: **Fase 1 — MVP del backend** (ver `docs/roadmap.md`).
-- Hecho: estructura del repo, documentación, modelo de datos, docker compose, CI en verde.
-- Siguiente: generar la API con el bootstrap, aplicar la migración inicial y construir el módulo `auth` (registro, login, JWT, guards por rol) con sus pruebas.
+- Hecho: estructura del repo, documentación, API y web generadas, Prisma 7 con migración inicial (ADR 0003), `ConfigModule` con variables validadas y `PrismaService`, CI en verde con Node 24.
+- Siguiente: día 3 de `docs/plan-diario.md` (configuración base de la API: validación global, Swagger, CORS y endpoint de salud).
+- Local: si ya hay otro PostgreSQL en el puerto 5432, usa `POSTGRES_PORT=5433` en el `.env` (y el mismo puerto en `DATABASE_URL`).

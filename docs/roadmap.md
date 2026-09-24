@@ -3,8 +3,8 @@
 Cada fase termina con algo funcional y demostrable. Marca las tareas a medida que avances.
 
 ## Fase 1 — MVP del backend
-- [ ] Generar la API con NestJS y configurar Prisma
-- [ ] Migración inicial con el modelo de datos
+- [x] Generar la API con NestJS y configurar Prisma
+- [x] Migración inicial con el modelo de datos
 - [ ] Módulo `auth`: registro, login, JWT y guards por rol
 - [ ] Módulo `tickets`: CRUD, asignación, cambio de estado y comentarios
 - [ ] Validación de entradas con DTOs (`class-validator`)
