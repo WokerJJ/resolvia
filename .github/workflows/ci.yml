@@ -31,7 +31,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://resolvia:resolvia_test@localhost:5432/resolvia_test?schema=public
-      JWT_SECRET: ci-secret
+      JWT_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
 
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +56,10 @@ jobs:
       - name: Lint
         if: steps.check.outputs.exists == 'true'
         run: npm run lint --if-present
+
+      - name: Tipos
+        if: steps.check.outputs.exists == 'true'
+        run: npm run typecheck
 
       - name: Migraciones de base de datos
         if: steps.check.outputs.exists == 'true' && hashFiles('apps/api/prisma/schema.prisma') != ''
