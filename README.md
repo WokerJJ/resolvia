@@ -110,7 +110,7 @@ resolvia/
 
 > El proyecto está en su fase inicial. Estas instrucciones se irán completando con cada módulo.
 
-**Requisitos:** Docker y Docker Compose, Node.js 20 o superior, Flutter (solo para la app móvil).
+**Requisitos:** Docker y Docker Compose, Node.js 24 (ver `.nvmrc`), Flutter (solo para la app móvil).
 
 ```bash
 # 1. Clonar el repositorio
