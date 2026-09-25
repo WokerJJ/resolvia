@@ -11,7 +11,8 @@ describe('validateEnv', () => {
 
     expect(env.PORT).toBe(3000);
     expect(env.JWT_EXPIRES_IN).toBe('1d');
-    expect(env.LLM_PROVIDER).toBe(LlmProviderName.Ollama);
+    expect(env.LLM_PROVIDER).toBe(LlmProviderName.OpenAICompatible);
+    expect(env.EMBEDDING_DIMENSIONS).toBe(768);
   });
 
   it('converts numeric strings to numbers', () => {
@@ -38,6 +39,12 @@ describe('validateEnv', () => {
     ).toThrow(/CORS_ORIGINS/);
   });
 
+  it('fails when EMBEDDING_DIMENSIONS is not a positive integer', () => {
+    expect(() =>
+      validateEnv({ ...validEnv, EMBEDDING_DIMENSIONS: '0' }),
+    ).toThrow(/EMBEDDING_DIMENSIONS/);
+  });
+
   it('fails when DATABASE_URL is missing', () => {
     expect(() => validateEnv({ JWT_SECRET: validEnv.JWT_SECRET })).toThrow(
       /DATABASE_URL/,
@@ -51,25 +58,25 @@ describe('validateEnv', () => {
   });
 
   it('fails when LLM_PROVIDER is not supported', () => {
-    expect(() => validateEnv({ ...validEnv, LLM_PROVIDER: 'openai' })).toThrow(
+    expect(() => validateEnv({ ...validEnv, LLM_PROVIDER: 'ollama' })).toThrow(
       /LLM_PROVIDER/,
     );
   });
 
-  it('requires ANTHROPIC_API_KEY only when the provider is anthropic', () => {
+  it('requires LLM_API_KEY only when the provider is anthropic', () => {
     expect(() =>
       validateEnv({
         ...validEnv,
-        LLM_PROVIDER: 'ollama',
-        ANTHROPIC_API_KEY: '',
+        LLM_PROVIDER: 'openai-compatible',
+        LLM_API_KEY: '',
       }),
     ).not.toThrow();
     expect(() =>
       validateEnv({
         ...validEnv,
         LLM_PROVIDER: 'anthropic',
-        ANTHROPIC_API_KEY: '',
+        LLM_API_KEY: '',
       }),
-    ).toThrow(/ANTHROPIC_API_KEY/);
+    ).toThrow(/LLM_API_KEY/);
   });
 });
