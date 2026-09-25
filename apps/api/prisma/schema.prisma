@@ -70,6 +70,7 @@ model Ticket {
   aiCategory   TicketCategory?
   aiPriority   TicketPriority?
   aiConfidence Float?
+  aiModel      String? // proveedor y modelo que clasificó el ticket (ADR 0004)
 
   createdById  String
   createdBy    User    @relation("CreatedTickets", fields: [createdById], references: [id])
@@ -119,10 +120,11 @@ model KnowledgeDocument {
 }
 
 model DocumentChunk {
-  id         String                      @id @default(uuid())
-  documentId String
-  document   KnowledgeDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  content    String
-  position   Int
-  embedding  Unsupported("vector(768)")? // nomic-embed-text genera vectores de 768 dimensiones
+  id             String                      @id @default(uuid())
+  documentId     String
+  document       KnowledgeDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content        String
+  position       Int
+  embedding      Unsupported("vector(768)")? // 768 = EMBEDDING_DIMENSIONS (nomic-embed-text por defecto, ver ADR 0004)
+  embeddingModel String? // modelo que generó el vector; no se mezclan modelos en una búsqueda
 }
