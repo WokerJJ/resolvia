@@ -15,8 +15,9 @@ import {
   validateSync,
 } from 'class-validator';
 
+/** Chat providers supported by the ai module (see ADR 0004). */
 export enum LlmProviderName {
-  Ollama = 'ollama',
+  OpenAICompatible = 'openai-compatible',
   Anthropic = 'anthropic',
 }
 
@@ -57,19 +58,12 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   JWT_EXPIRES_IN = '1d';
 
+  // Chat model. 'openai-compatible' covers OpenAI, Azure OpenAI, Gemini, vLLM, Ollama...
   @IsEnum(LlmProviderName)
-  LLM_PROVIDER = LlmProviderName.Ollama;
+  LLM_PROVIDER = LlmProviderName.OpenAICompatible;
 
   @IsUrl({ require_tld: false, require_protocol: true })
-  OLLAMA_BASE_URL = 'http://localhost:11434';
-
-  @IsString()
-  @IsNotEmpty()
-  OLLAMA_CHAT_MODEL = 'llama3.2:3b';
-
-  @IsString()
-  @IsNotEmpty()
-  OLLAMA_EMBED_MODEL = 'nomic-embed-text';
+  LLM_BASE_URL = 'http://localhost:11434/v1';
 
   @ValidateIf(
     (env: EnvironmentVariables) =>
@@ -77,11 +71,28 @@ export class EnvironmentVariables {
   )
   @IsString()
   @IsNotEmpty()
-  ANTHROPIC_API_KEY?: string;
+  LLM_API_KEY?: string;
 
   @IsString()
   @IsNotEmpty()
-  ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
+  LLM_CHAT_MODEL = 'llama3.2:3b';
+
+  // Embedding model, configured independently from the chat model.
+  @IsUrl({ require_tld: false, require_protocol: true })
+  EMBEDDING_BASE_URL = 'http://localhost:11434/v1';
+
+  @IsString()
+  EMBEDDING_API_KEY = '';
+
+  @IsString()
+  @IsNotEmpty()
+  EMBEDDING_MODEL = 'nomic-embed-text';
+
+  /** Must match the vector column in the schema (vector(768)). */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  EMBEDDING_DIMENSIONS: number = 768;
 }
 
 export function validateEnv(
