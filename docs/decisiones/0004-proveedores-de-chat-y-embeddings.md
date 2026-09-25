@@ -1,6 +1,6 @@
 # ADR 0004 — Proveedores de chat y embeddings intercambiables
 
-**Estado:** Aceptada · **Fecha:** 2026-09-25 · **Reemplaza a:** [ADR 0001](0001-proveedor-llm-intercambiable.md)
+**Estado:** Aceptada, modificada por el [ADR 0006](0006-proveedores-como-transporte.md) (proveedores como transporte) y el [ADR 0008](0008-embeddings-multilingues.md) (modelo de embeddings por defecto) · **Fecha:** 2026-09-25 · **Reemplaza a:** [ADR 0001](0001-proveedor-llm-intercambiable.md)
 
 ## Contexto
 

@@ -1,3 +1,5 @@
+# Entorno de desarrollo. Los puertos se publican solo en 127.0.0.1 para que no
+# queden accesibles desde la red; en producción no se publican (ver ADR 0010).
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -8,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resolvia_dev}
       POSTGRES_DB: ${POSTGRES_DB:-resolvia}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,14 +21,22 @@ services:
 
   # Modelo de IA local. Se levanta solo con: docker compose --profile ai up -d
   ollama:
-    image: ollama/ollama:latest
+    # Versión fijada: "latest" puede cambiar el comportamiento sin aviso.
+    image: ollama/ollama:0.34.4
     container_name: resolvia-ollama
     profiles: ["ai"]
     restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    healthcheck:
+      # La imagen no incluye curl; "ollama list" consulta al propio servidor.
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
 volumes:
   db_data:
