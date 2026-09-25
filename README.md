@@ -9,7 +9,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
-![Licencia](https://img.shields.io/badge/licencia-MIT-green)
+![Licencia](https://img.shields.io/badge/licencia-AGPL--3.0-blue)
 
 ---
 
@@ -149,4 +149,10 @@ Estudiante de Tecnología en Gestión de Sistemas Informáticos · UNINTEP
 
 ## Licencia
 
-Distribuido bajo la licencia MIT. Ver [LICENSE](LICENSE).
+Resolvia se distribuye bajo la licencia **GNU Affero General Public License v3.0 (AGPL-3.0)**. Ver [LICENSE](LICENSE).
+
+- Puedes usarlo, estudiarlo, modificarlo e instalarlo en tu organización.
+- Si ofreces Resolvia, modificado, **como servicio a través de una red**, debes poner el código de tus modificaciones a disposición de sus usuarios.
+- Hay una **licencia comercial** disponible para quien no pueda cumplir las condiciones de la AGPL; solicítala contactando al autor.
+
+El porqué de esta elección está en el [ADR 0011](docs/decisiones/0011-licencia-agpl.md).
