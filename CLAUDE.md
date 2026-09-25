@@ -82,5 +82,6 @@ cd apps/api && npm run start:dev
 
 - Fase actual: **Fase 1 — MVP del backend** (ver `docs/roadmap.md`).
 - Hecho: estructura del repo, documentación, API y web generadas, Prisma 7 con migración inicial (ADR 0003), `ConfigModule` con variables validadas, `PrismaService`, configuración HTTP común (`src/app.setup.ts`: prefijo `/api`, validación global, CORS, Swagger en `/api/docs`) y `GET /api/health`. IA agnóstica al proveedor definida en el ADR 0004 (variables `LLM_*`/`EMBEDDING_*` y columnas `aiModel`/`embeddingModel` listas; el módulo `ai` se implementa en la fase 3). CI en verde con Node 24.
-- Siguiente: día 4 de `docs/plan-diario.md` (módulo `users`, issue #3). Jhon escribe `UsersService` y sus pruebas; Claude prepara el repositorio y revisa. Las e2e usan `test/utils/create-test-app.ts`, que aplica `configureApp` igual que `main.ts`.
+- Hecho también: módulo `users` (día 4, issue #3): `UsersService` exporta `create`, `findByEmail` y `findById`; los errores de dominio (`EmailAlreadyInUseError`) no son HTTP.
+- Siguiente: día 5 (issue #4, registro y login con JWT). Jhon escribe partes clave; Claude prepara la estructura y revisa. Las e2e usan `test/utils/create-test-app.ts`, que aplica `configureApp` igual que `main.ts`.
 - Local: si ya hay otro PostgreSQL en el puerto 5432, usa `POSTGRES_PORT=5433` en el `.env` (y el mismo puerto en `DATABASE_URL`).
