@@ -204,6 +204,8 @@ Estudiante de Tecnología en Gestión de Sistemas Informáticos · UNINTEP
 
 ## Licencia
 
+Copyright © 2026 Jhon Hucker Chalarca Ramírez.
+
 Resolvia se distribuye bajo la licencia **GNU Affero General Public License v3.0 (AGPL-3.0)**. Ver [LICENSE](LICENSE).
 
 - Puedes usarlo, estudiarlo, modificarlo e instalarlo en tu organización.
@@ -211,3 +213,7 @@ Resolvia se distribuye bajo la licencia **GNU Affero General Public License v3.0
 - Hay una **licencia comercial** disponible para quien no pueda cumplir las condiciones de la AGPL; solicítala contactando al autor.
 
 El porqué de esta elección está en el [ADR 0011](docs/decisiones/0011-licencia-agpl.md).
+
+### Marca
+
+El nombre **Resolvia** y su logo identifican a este proyecto y a su autor, y **no están cubiertos por la licencia AGPL-3.0**, que solo se aplica al código. Puedes usar, modificar y redistribuir el código según la licencia, pero una versión modificada o un servicio basado en ella debe usar **otro nombre** y no presentarse como el Resolvia oficial ni como respaldado por su autor. Mencionar que tu trabajo se basa en Resolvia, con un enlace a este repositorio, sí está permitido y es bienvenido.
