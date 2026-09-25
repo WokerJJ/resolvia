@@ -15,7 +15,7 @@ Resolvia es un monorepo con tres aplicaciones cliente-servidor que comparten una
 | `auth` | Registro, inicio de sesión, emisión de JWT y guards por rol |
 | `users` | Gestión de usuarios y roles |
 | `tickets` | Ciclo de vida de los tickets, asignación y comentarios |
-| `ai` | Interfaz `LLMProvider`, clasificación y generación de sugerencias |
+| `ai` | Interfaces `ChatProvider` y `EmbeddingProvider` con adaptadores intercambiables, clasificación y generación de sugerencias |
 | `knowledge` | Carga de PDFs, división en fragmentos (*chunking*) y embeddings |
 | `metrics` | Consultas agregadas para el tablero |
 
@@ -56,6 +56,6 @@ sequenceDiagram
 ## Principios
 
 - **La IA sugiere, la persona decide.** Ninguna acción de la IA se aplica sin revisión del técnico.
-- **Proveedores intercambiables.** El dominio no conoce qué modelo se usa (ver ADR 0001).
+- **Proveedores intercambiables.** El dominio no conoce qué modelo se usa. Chat y embeddings se configuran por separado y cualquier API compatible con OpenAI sirve como proveedor, incluso dentro de la infraestructura de la organización (ver ADR 0004).
 - **Todo se levanta con Docker.** Un desarrollador nuevo debe poder correr el proyecto con pocos comandos.
 - **Nada llega a `main` sin pasar la integración continua.**

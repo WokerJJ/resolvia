@@ -52,7 +52,7 @@ flowchart LR
 
     subgraph Backend
         API[API REST<br/>NestJS + TypeScript]
-        AI[Módulo IA<br/>LLMProvider]
+        AI[Módulo IA<br/>ChatProvider + EmbeddingProvider]
     end
 
     subgraph Datos
@@ -61,8 +61,8 @@ flowchart LR
     end
 
     subgraph Modelos
-        OL[Ollama<br/>modelo local]
-        EXT[API externa<br/>de LLM]
+        OL[Modelo local<br/>Ollama, vLLM]
+        EXT[API externa<br/>OpenAI, Azure, Claude…]
     end
 
     W --> API
@@ -74,7 +74,7 @@ flowchart LR
     AI -.modo nube.-> EXT
 ```
 
-El módulo de IA se construye sobre una interfaz `LLMProvider` con dos implementaciones intercambiables (modelo local con Ollama o API externa), seleccionadas por variable de entorno. Esto permite desarrollar sin costos con modelos livianos y cambiar a un proveedor en la nube sin modificar la lógica de negocio. Ver [docs/arquitectura.md](docs/arquitectura.md) y las [decisiones técnicas](docs/decisiones/).
+El módulo de IA no depende de ningún proveedor: el modelo de chat y el de embeddings se configuran por separado con variables de entorno. Un único adaptador compatible con la API de OpenAI permite usar OpenAI, Azure OpenAI, Gemini, Mistral o modelos propios servidos con Ollama o vLLM, y hay un adaptador para Claude. Así una organización puede usar el proveedor que ya tiene contratado, o mantener todos los datos dentro de su infraestructura, sin modificar la lógica de negocio. Ver [docs/arquitectura.md](docs/arquitectura.md) y las [decisiones técnicas](docs/decisiones/).
 
 ## Stack tecnológico
 
@@ -84,7 +84,7 @@ El módulo de IA se construye sobre una interfaz `LLMProvider` con dos implement
 | Base de datos | PostgreSQL 16 con extensión pgvector |
 | Frontend web | React, TypeScript, Vite |
 | Móvil | Flutter, Dart |
-| Inteligencia artificial | Ollama (modelos locales), API de LLM externa, embeddings, RAG |
+| Inteligencia artificial | Cualquier API compatible con OpenAI (incluye Ollama local), Claude, embeddings con pgvector, RAG |
 | Pruebas | Vitest, Supertest |
 | Infraestructura | Docker, Docker Compose, GitHub Actions (CI/CD), AWS |
 
