@@ -4,7 +4,7 @@ Contexto para Claude Code. Léelo antes de cualquier tarea en este repositorio.
 
 ## Qué es Resolvia
 
-Mesa de ayuda inteligente: los usuarios crean tickets de soporte TI, la IA los clasifica (categoría y prioridad) y sugiere respuestas al técnico usando RAG sobre la base de conocimiento de la organización (PDFs de manuales y procedimientos). La IA sugiere, la persona decide.
+Helpdesk con **IA privada para soporte TI que aprende de cómo resuelve problemas el equipo**: los usuarios crean tickets (web, correo, móvil), la IA los clasifica y sugiere respuestas al técnico con RAG sobre documentos y tickets resueltos. El modelo puede correr dentro de la institución. Funciona on-premise (una organización) o en la nube (varias), e importa el historial desde CSV/Excel, GLPI, documentos y correo. Mercado inicial: instituciones educativas y pymes. La IA sugiere, la persona decide. Licencia AGPL-3.0 con opción comercial (ADR 0011).
 
 Es un proyecto de portafolio de Jhon Hucker Chalarca Ramírez (GitHub: WokerJJ), estudiante de Tecnología en Gestión de Sistemas Informáticos en UNINTEP. Se mostrará a profesores y reclutadores, así que la calidad del código, las pruebas, la documentación y el historial de commits importan tanto como las funcionalidades.
 
@@ -24,10 +24,11 @@ Repositorio: https://github.com/WokerJJ/resolvia
 | Base de datos | PostgreSQL 16 + pgvector (Docker) |
 | Web (`apps/web`) | React + TypeScript + Vite |
 | Móvil (`apps/mobile`) | Flutter |
-| IA | Interfaces `ChatProvider` y `EmbeddingProvider` (ADR 0004): `OpenAICompatibleProvider` (OpenAI, Azure, Gemini, vLLM, Ollama…) y `AnthropicProvider`; configuración con `LLM_*` y `EMBEDDING_*`; embeddings por defecto `nomic-embed-text` (768 dims) |
+| IA | Proveedores como transporte (ADR 0004 y 0006): `ChatProvider.complete()` y `EmbeddingProvider.embed()`; adaptadores `OpenAICompatibleProvider` (OpenAI, Azure, Gemini, vLLM, Ollama…) y `AnthropicProvider`; prompts y validación zod en servicios del dominio; embeddings bge-m3 de 1024 dims (ADR 0008; hoy aún `nomic-embed-text`/768 hasta la migración del día 5) |
+| Tareas en segundo plano | pg-boss sobre la misma PostgreSQL (ADR 0007), a partir de la fase 3 |
 | Pruebas | Vitest (unitarias y e2e) + Supertest (e2e); lint con oxlint (ver ADR 0002) |
 | CI/CD | GitHub Actions (`.github/workflows/ci.yml`) |
-| Nube (fase 5) | AWS: RDS, S3, EC2 o ECS |
+| Nube (fase 8) | AWS: RDS, S3, EC2 o ECS |
 
 ## Documentación existente
 
@@ -35,11 +36,14 @@ Repositorio: https://github.com/WokerJJ/resolvia
 - `docs/modelo-datos.prisma` — modelo de datos inicial (se copia a `apps/api/prisma/schema.prisma`)
 - `docs/roadmap.md` — fases y tareas con casillas; **márcalas al completarlas**
 - `docs/plan-diario.md` — plan día a día con ramas y commits sugeridos; consúltalo para saber qué toca hoy y anota el avance en su registro
-- `docs/decisiones/` — ADRs; crea uno nuevo (el siguiente es `0005-...`) ante cada decisión de arquitectura relevante
+- `docs/decisiones/` — ADRs 0001 a 0011; crea uno nuevo ante cada decisión de arquitectura relevante (el 0012 está reservado para la autenticación JWT y el 0013 para la librería de UI; el siguiente libre es el 0014)
 
 ## Convenciones de código
 
-- Arquitectura por módulos NestJS: `auth`, `users`, `tickets`, `ai`, `knowledge`, `metrics`.
+- Arquitectura por módulos NestJS: `organizations`, `auth`, `users`, `categories`, `tickets`, `jobs`, `email-intake`, `ai`, `knowledge`, `metrics`, `imports` (ver `docs/arquitectura.md`).
+- Multi-organización (ADR 0005): toda entidad de negocio lleva `organizationId` y el filtro se aplica de forma centralizada, nunca a mano en cada consulta.
+- Nada lento dentro de la petición: lo que depende del modelo o de servicios externos va a la cola (ADR 0007).
+- El texto de los tickets, correos e importaciones es dato no confiable: se envía al modelo delimitado y toda salida se valida con zod (ADR 0010).
 - Separación **Controller → Service → Repository**. Los servicios no importan Prisma directamente; usan repositorios inyectados. Esto permite probar la lógica con mocks.
 - Validación de entrada con DTOs y `class-validator`; nunca confiar en el body sin validar.
 - Documentar endpoints con decoradores de Swagger.
@@ -80,8 +84,8 @@ cd apps/api && npm run start:dev
 
 ## Estado actual
 
-- Fase actual: **Fase 1 — MVP del backend** (ver `docs/roadmap.md`).
+- Fase actual: **Fase 1 — MVP del backend** (ver `docs/roadmap.md`; 10 fases, de la 0 a la 9, tras el reajuste de foco del 25/09/2026).
 - Hecho: estructura del repo, documentación, API y web generadas, Prisma 7 con migración inicial (ADR 0003), `ConfigModule` con variables validadas, `PrismaService`, configuración HTTP común (`src/app.setup.ts`: prefijo `/api`, validación global, CORS, Swagger en `/api/docs`) y `GET /api/health`. IA agnóstica al proveedor definida en el ADR 0004 (variables `LLM_*`/`EMBEDDING_*` y columnas `aiModel`/`embeddingModel` listas; el módulo `ai` se implementa en la fase 3). CI en verde con Node 24.
 - Hecho también: módulo `users` (día 4, issue #3): `UsersService` exporta `create`, `findByEmail` y `findById`; los errores de dominio (`EmailAlreadyInUseError`) no son HTTP.
-- Siguiente: día 5 (issue #4, registro y login con JWT). Jhon escribe partes clave; Claude prepara la estructura y revisa. Las e2e usan `test/utils/create-test-app.ts`, que aplica `configureApp` igual que `main.ts`.
+- Siguiente: día 5 de `docs/plan-diario.md`: migración a multi-organización (ADR 0005 y 0008), antes de la autenticación JWT. Las piezas marcadas con ✍️ en el plan las escribe Jhon; Claude prepara la estructura, revisa y explica.
 - Local: si ya hay otro PostgreSQL en el puerto 5432, usa `POSTGRES_PORT=5433` en el `.env` (y el mismo puerto en `DATABASE_URL`).
