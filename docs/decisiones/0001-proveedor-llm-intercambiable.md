@@ -1,6 +1,6 @@
 # ADR 0001 — Proveedor de LLM intercambiable
 
-**Estado:** Aceptada · **Fecha:** 2026-09-24
+**Estado:** Reemplazada por el [ADR 0004](0004-proveedores-de-chat-y-embeddings.md) · **Fecha:** 2026-09-24
 
 ## Contexto
 
