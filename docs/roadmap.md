@@ -16,7 +16,7 @@ Corre en paralelo al desarrollo; no lo bloquea.
 - [x] Integración continua en GitHub Actions (lint, tipos, migraciones, pruebas y build)
 - [x] Módulo `users` con repositorio y contraseñas cifradas con bcrypt
 - [x] Multi-organización: migración al esquema objetivo del ADR 0005 (organizaciones, categorías como tabla, `vector(1024)`)
-- [ ] Filtrado centralizado por organización
+- [x] Filtrado centralizado por organización
 - [ ] Módulo `auth`: registro, login, JWT con `organizationId` y guards por rol
 - [ ] Módulo `tickets`: creación, consulta con filtros, asignación y cambio de estado
 - [ ] Categorías configurables por organización
