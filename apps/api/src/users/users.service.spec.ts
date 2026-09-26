@@ -24,6 +24,7 @@ describe('UsersService', () => {
     create: vi.fn<UsersRepository['create']>(),
     findById: vi.fn<UsersRepository['findById']>(),
     findByEmail: vi.fn<UsersRepository['findByEmail']>(),
+    findCredentialsByEmail: vi.fn<UsersRepository['findCredentialsByEmail']>(),
   };
   const service = new UsersService(usersRepository as UsersRepository);
 
@@ -108,6 +109,43 @@ describe('UsersService', () => {
       await expect(service.findByEmail('missing@example.com')).resolves.toBe(
         null,
       );
+    });
+  });
+
+  describe('verifyCredentials', () => {
+    it('returns the user when the password matches', async () => {
+      const passwordHash = await bcrypt.hash(input.password, 4);
+      usersRepository.findCredentialsByEmail.mockResolvedValue({
+        user,
+        passwordHash,
+      });
+
+      await expect(
+        service.verifyCredentials(' Ana@Example.com ', input.password),
+      ).resolves.toBe(user);
+      expect(usersRepository.findCredentialsByEmail).toHaveBeenCalledWith(
+        'ana@example.com',
+      );
+    });
+
+    it('returns null when the password does not match', async () => {
+      const passwordHash = await bcrypt.hash(input.password, 4);
+      usersRepository.findCredentialsByEmail.mockResolvedValue({
+        user,
+        passwordHash,
+      });
+
+      await expect(
+        service.verifyCredentials(user.email, 'wrong-password'),
+      ).resolves.toBeNull();
+    });
+
+    it('returns null when the email does not exist', async () => {
+      usersRepository.findCredentialsByEmail.mockResolvedValue(null);
+
+      await expect(
+        service.verifyCredentials('missing@example.com', input.password),
+      ).resolves.toBeNull();
     });
   });
 
