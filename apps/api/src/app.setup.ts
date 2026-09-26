@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { EnvironmentVariables } from './config/env.validation.js';
+import { OrganizationContext } from './organizations/organization-context.js';
 
 export const API_PREFIX = 'api';
 
@@ -12,6 +13,13 @@ export const API_PREFIX = 'api';
 export function configureApp(app: INestApplication): void {
   const config =
     app.get<ConfigService<EnvironmentVariables, true>>(ConfigService);
+
+  // Each request gets its own organization scope; authentication fills it
+  // from the JWT, so queries can never mix organizations between requests.
+  const organizationContext = app.get(OrganizationContext);
+  app.use((_req: unknown, _res: unknown, next: () => void) =>
+    organizationContext.runForRequest(next),
+  );
 
   app.setGlobalPrefix(API_PREFIX);
   app.useGlobalPipes(
