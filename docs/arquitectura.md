@@ -18,10 +18,10 @@ La misma base de código funciona en dos modos (ADR 0005): **on-premise**, con u
 | Módulo | Responsabilidad | Estado |
 |---|---|---|
 | `config` | Variables de entorno validadas al arrancar | ✅ |
-| `prisma` | Cliente de Prisma 7 compartido (adaptador `pg`) | ✅ |
+| `prisma` | Cliente de Prisma 7 compartido (adaptador `pg`) con la extensión que filtra por organización | ✅ |
 | `health` | `GET /api/health`: disponibilidad de la API y la base de datos | ✅ |
 | `users` | Usuarios y roles; contraseñas cifradas con bcrypt | ✅ |
-| `organizations` | Organizaciones y contexto de organización de cada petición | ⏳ Fase 1 |
+| `organizations` | Organizaciones y contexto de organización de cada petición (`OrganizationContext`) | ✅ |
 | `auth` | Registro, login, JWT con `organizationId` y guards por rol | ⏳ Fase 1 |
 | `categories` | Categorías configurables por organización | ⏳ Fase 1 |
 | `tickets` | Ciclo de vida, asignación, comentarios públicos e internos, historial (`TicketEvent`) y SLA | ⏳ Fase 1 |

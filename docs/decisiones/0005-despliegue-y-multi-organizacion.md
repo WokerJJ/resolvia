@@ -25,6 +25,7 @@ El modelo de datos actual no tiene el concepto de organización: usuarios, ticke
 ### Aislamiento entre organizaciones
 
 - El filtrado por organización se centraliza en una **extensión del cliente de Prisma** que agrega `organizationId` a las consultas de los modelos de negocio a partir del contexto de la petición. Los repositorios no repiten el filtro a mano, así que olvidarlo no filtra datos entre organizaciones.
+- La extensión **deniega por defecto**: una consulta a un modelo con organización sin organización en el contexto falla, en lugar de devolver filas de todas. Las operaciones realmente globales (buscar el correo al iniciar sesión, seeds, trabajos del sistema) lo declaran de forma explícita.
 - En la fase de nube se evaluará además **Row Level Security** de PostgreSQL como segunda barrera, dentro de la propia base de datos.
 
 ### Esquema objetivo
