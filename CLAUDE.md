@@ -24,7 +24,7 @@ Repositorio: https://github.com/WokerJJ/resolvia
 | Base de datos | PostgreSQL 16 + pgvector (Docker) |
 | Web (`apps/web`) | React + TypeScript + Vite |
 | Móvil (`apps/mobile`) | Flutter |
-| IA | Proveedores como transporte (ADR 0004 y 0006): `ChatProvider.complete()` y `EmbeddingProvider.embed()`; adaptadores `OpenAICompatibleProvider` (OpenAI, Azure, Gemini, vLLM, Ollama…) y `AnthropicProvider`; prompts y validación zod en servicios del dominio; embeddings bge-m3 de 1024 dims (ADR 0008; hoy aún `nomic-embed-text`/768 hasta la migración del día 5) |
+| IA | Proveedores como transporte (ADR 0004 y 0006): `ChatProvider.complete()` y `EmbeddingProvider.embed()`; adaptadores `OpenAICompatibleProvider` (OpenAI, Azure, Gemini, vLLM, Ollama…) y `AnthropicProvider`; prompts y validación zod en servicios del dominio; embeddings bge-m3 de 1024 dims (ADR 0008) |
 | Tareas en segundo plano | pg-boss sobre la misma PostgreSQL (ADR 0007), a partir de la fase 3 |
 | Pruebas | Vitest (unitarias y e2e) + Supertest (e2e); lint con oxlint (ver ADR 0002) |
 | CI/CD | GitHub Actions (`.github/workflows/ci.yml`) |
@@ -87,5 +87,6 @@ cd apps/api && npm run start:dev
 - Fase actual: **Fase 1 — MVP del backend** (ver `docs/roadmap.md`; 10 fases, de la 0 a la 9, tras el reajuste de foco del 25/09/2026).
 - Hecho: estructura del repo, documentación, API y web generadas, Prisma 7 con migración inicial (ADR 0003), `ConfigModule` con variables validadas, `PrismaService`, configuración HTTP común (`src/app.setup.ts`: prefijo `/api`, validación global, CORS, Swagger en `/api/docs`) y `GET /api/health`. IA agnóstica al proveedor definida en el ADR 0004 (variables `LLM_*`/`EMBEDDING_*` y columnas `aiModel`/`embeddingModel` listas; el módulo `ai` se implementa en la fase 3). CI en verde con Node 24.
 - Hecho también: módulo `users` (día 4, issue #3): `UsersService` exporta `create`, `findByEmail` y `findById`; los errores de dominio (`EmailAlreadyInUseError`) no son HTTP.
-- Siguiente: día 5 de `docs/plan-diario.md`: migración a multi-organización (ADR 0005 y 0008), antes de la autenticación JWT. Las piezas marcadas con ✍️ en el plan las escribe Jhon; Claude prepara la estructura, revisa y explica.
+- Hecho también: migración a multi-organización (día 5, issue #16): `Organization`, `organizationId` en las entidades de negocio, `Category` como tabla, `TicketEvent`, `SlaPolicy`, `vector(1024)` y `EMBEDDING_*` con bge-m3. En Prisma 7, `migrate dev` no regenera el cliente: ejecutar `npx prisma generate` después. Prisma no detecta cambios en columnas `Unsupported("vector(n)")`; esos `ALTER` se escriben a mano en la migración.
+- Siguiente: día 6 (issue #17): módulo `organizations` y filtrado centralizado por organización. Las piezas marcadas con ✍️ en el plan las escribe Jhon; Claude prepara la estructura, revisa y explica.
 - Local: si ya hay otro PostgreSQL en el puerto 5432, usa `POSTGRES_PORT=5433` en el `.env` (y el mismo puerto en `DATABASE_URL`).

@@ -15,7 +15,7 @@ Corre en paralelo al desarrollo; no lo bloquea.
 - [x] Swagger configurado en `/api/docs`
 - [x] Integración continua en GitHub Actions (lint, tipos, migraciones, pruebas y build)
 - [x] Módulo `users` con repositorio y contraseñas cifradas con bcrypt
-- [ ] Multi-organización: migración al esquema objetivo del ADR 0005 (organizaciones, categorías como tabla, `vector(1024)`)
+- [x] Multi-organización: migración al esquema objetivo del ADR 0005 (organizaciones, categorías como tabla, `vector(1024)`)
 - [ ] Filtrado centralizado por organización
 - [ ] Módulo `auth`: registro, login, JWT con `organizationId` y guards por rol
 - [ ] Módulo `tickets`: creación, consulta con filtros, asignación y cambio de estado
