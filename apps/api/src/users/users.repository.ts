@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { CreateUserData, User } from './user.types.js';
+import type { CreateUserData, User, UserCredentials } from './user.types.js';
 import { EmailAlreadyInUseError } from './users.errors.js';
 
 /**
@@ -13,6 +13,10 @@ export abstract class UsersRepository {
   abstract create(data: CreateUserData): Promise<User>;
   abstract findById(id: string): Promise<User | null>;
   abstract findByEmail(email: string): Promise<User | null>;
+  /** The only query that reads the password hash; used to verify a login. */
+  abstract findCredentialsByEmail(
+    email: string,
+  ): Promise<UserCredentials | null>;
 }
 
 /** Columns returned to the app: everything except passwordHash. */
@@ -61,5 +65,16 @@ export class PrismaUsersRepository implements UsersRepository {
       where: { email },
       select: publicUserFields,
     });
+  }
+
+  async findCredentialsByEmail(email: string): Promise<UserCredentials | null> {
+    const row = await this.prisma.user.findUnique({
+      where: { email },
+      select: { ...publicUserFields, passwordHash: true },
+    });
+    if (!row) return null;
+
+    const { passwordHash, ...user } = row;
+    return { user, passwordHash };
   }
 }

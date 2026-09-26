@@ -105,6 +105,21 @@ describe('PrismaUsersRepository (integration)', () => {
     expect(byId).not.toHaveProperty('passwordHash');
   });
 
+  it('returns the password hash only through findCredentialsByEmail', async () => {
+    const data = newUserData();
+    const created = await inOrganization(() => repository.create(data));
+
+    const credentials = await context.runAsSystem(() =>
+      repository.findCredentialsByEmail(data.email),
+    );
+
+    expect(credentials).toEqual({
+      user: created,
+      passwordHash: data.passwordHash,
+    });
+    expect(credentials?.user).not.toHaveProperty('passwordHash');
+  });
+
   it('returns null when the user does not exist', async () => {
     await expect(
       inOrganization(() => repository.findById(randomUUID())),

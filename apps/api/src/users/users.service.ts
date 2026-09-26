@@ -9,6 +9,14 @@ const BCRYPT_ROUNDS = 10;
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
+/**
+ * Hash compared when the email does not exist, so a failed login takes about
+ * the same time whether or not the account exists (prevents user enumeration).
+ */
+let dummyHash: string | undefined;
+const getDummyHash = async (): Promise<string> =>
+  (dummyHash ??= await bcrypt.hash('resolvia-timing-guard', BCRYPT_ROUNDS));
+
 export interface CreateUserInput {
   organizationId: string;
   email: string;
@@ -39,6 +47,26 @@ export class UsersService {
 
   findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findByEmail(normalizeEmail(email));
+  }
+
+  /**
+   * Returns the user if the password matches, or null otherwise. The password
+   * hash never leaves this module.
+   */
+  async verifyCredentials(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
+    const credentials = await this.usersRepository.findCredentialsByEmail(
+      normalizeEmail(email),
+    );
+
+    const matches = await bcrypt.compare(
+      password,
+      credentials?.passwordHash ?? (await getDummyHash()),
+    );
+
+    return credentials && matches ? credentials.user : null;
   }
 
   findById(id: string): Promise<User | null> {

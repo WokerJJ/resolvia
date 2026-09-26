@@ -13,3 +13,11 @@ export class InvalidOrganizationNameError extends Error {
     this.name = 'InvalidOrganizationNameError';
   }
 }
+
+/** Domain error: mapping it to 404 Not Found is the job of the web layer. */
+export class OrganizationNotFoundError extends Error {
+  constructor(slug: string) {
+    super(`Organization not found: ${slug}`);
+    this.name = 'OrganizationNotFoundError';
+  }
+}

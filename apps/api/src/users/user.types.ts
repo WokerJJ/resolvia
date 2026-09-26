@@ -23,6 +23,12 @@ export interface User {
   updatedAt: Date;
 }
 
+/** A user together with its password hash. Never leaves the users module. */
+export interface UserCredentials {
+  user: User;
+  passwordHash: string;
+}
+
 /** Data the repository needs to store a new user (password already hashed). */
 export interface CreateUserData {
   organizationId: string;
