@@ -86,13 +86,13 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  EMBEDDING_MODEL = 'nomic-embed-text';
+  EMBEDDING_MODEL = 'bge-m3'; // multilingual (ADR 0008)
 
-  /** Must match the vector column in the schema (vector(768)). */
+  /** Must match the vector columns in the schema (vector(1024)). */
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  EMBEDDING_DIMENSIONS: number = 768;
+  EMBEDDING_DIMENSIONS: number = 1024;
 }
 
 export function validateEnv(
