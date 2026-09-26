@@ -1,5 +1,5 @@
-// Modelo de datos inicial de Resolvia.
-// El script scripts/bootstrap.sh lo copia a apps/api/prisma/schema.prisma.
+// Modelo de datos de Resolvia (ADR 0005: multi-organización; ADR 0008: embeddings bge-m3).
+// docs/modelo-datos.prisma es una copia de este archivo y debe mantenerse igual.
 
 generator client {
   provider            = "prisma-client"
@@ -35,96 +35,202 @@ enum TicketPriority {
   CRITICAL
 }
 
-enum TicketCategory {
-  NETWORK
-  HARDWARE
-  SOFTWARE
-  ACCOUNTS
-  OTHER
+enum TicketSource {
+  WEB
+  EMAIL
+  MOBILE
+  IMPORT
+}
+
+enum TicketEventType {
+  CREATED
+  STATUS_CHANGED
+  ASSIGNED
+  PRIORITY_CHANGED
+  CATEGORY_CHANGED
+  AI_CLASSIFIED
+  COMMENTED
+  IMPORTED
+}
+
+// On-premise: una sola organización por instalación. Nube: varias (ADR 0005).
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  tickets     Ticket[]
+  categories  Category[]
+  documents   KnowledgeDocument[]
+  slaPolicies SlaPolicy[]
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  email          String       @unique // único global: el correo determina la organización al iniciar sesión
+  name           String
+  passwordHash   String
+  role           Role         @default(USER)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   ticketsCreated  Ticket[]            @relation("CreatedTickets")
   ticketsAssigned Ticket[]            @relation("AssignedTickets")
   comments        Comment[]
   documents       KnowledgeDocument[]
+  ticketEvents    TicketEvent[]
+
+  @@index([organizationId])
+}
+
+// Reemplaza al enum TicketCategory: cada organización define sus propias categorías.
+model Category {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  description    String?
+  active         Boolean      @default(true) // se desactiva en lugar de borrarse, para no perder el historial
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  tickets   Ticket[] @relation("TicketCategory")
+  aiTickets Ticket[] @relation("TicketAiCategory")
+
+  @@unique([organizationId, name])
 }
 
 model Ticket {
-  id          String          @id @default(uuid())
-  title       String
-  description String
-  status      TicketStatus    @default(OPEN)
-  priority    TicketPriority?
-  category    TicketCategory?
+  id             String          @id @default(uuid())
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  title          String
+  description    String
+  status         TicketStatus    @default(OPEN)
+  priority       TicketPriority?
+  source         TicketSource    @default(WEB)
 
-  // Resultado de la clasificación automática (se guarda aparte para medir su precisión)
-  aiCategory   TicketCategory?
+  // Categoría final: la decide el técnico.
+  categoryId String?
+  category   Category? @relation("TicketCategory", fields: [categoryId], references: [id])
+
+  // Resultado de la clasificación automática, guardado aparte para medir su precisión (ADR 0008)
+  aiCategoryId String?
+  aiCategory   Category?       @relation("TicketAiCategory", fields: [aiCategoryId], references: [id])
   aiPriority   TicketPriority?
-  aiConfidence Float?
-  aiModel      String? // proveedor y modelo que clasificó el ticket (ADR 0004)
+  aiConfidence Float? // autoinformada por el modelo: solo orientativa, no se usa para decidir
+  aiModel      String? // proveedor y modelo que clasificó el ticket
 
   createdById  String
   createdBy    User    @relation("CreatedTickets", fields: [createdById], references: [id])
   assignedToId String?
   assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id])
 
+  // Importación (ADR 0009). importJobId se relaciona con ImportJob cuando exista ese modelo.
+  importJobId    String?
+  externalSource String? // origen del id externo, por ejemplo "glpi"
+  externalId     String?
+
+  resolution      String? // solución aplicada; alimenta el RAG sobre tickets resueltos
+  firstResponseAt DateTime? // primera respuesta pública del equipo (SLA)
+  dueAt           DateTime? // vencimiento según la política de SLA
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+
+  embedding      Unsupported("vector(1024)")? // tickets similares y RAG sobre tickets resueltos
+  embeddingModel String?
+
   comments      Comment[]
   aiSuggestions AiSuggestion[]
+  events        TicketEvent[]
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  resolvedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([status])
+  // Reimportar no duplica: un ticket externo se identifica por organización, fuente e id.
+  @@unique([organizationId, externalSource, externalId])
+  @@index([organizationId, status])
   @@index([assignedToId])
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  body      String
+  id         String   @id @default(uuid())
+  body       String
+  isInternal Boolean  @default(false) // nota interna del equipo, invisible para el solicitante
+  ticketId   String
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+// Historial del ticket: quién hizo qué y cuándo.
+model TicketEvent {
+  id        String          @id @default(uuid())
   ticketId  String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
+  ticket    Ticket          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorId   String? // null = el sistema o la IA
+  actor     User?           @relation(fields: [actorId], references: [id])
+  type      TicketEventType
+  data      Json // detalle del cambio, por ejemplo { from, to }
+  createdAt DateTime        @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model SlaPolicy {
+  id                String         @id @default(uuid())
+  organizationId    String
+  organization      Organization   @relation(fields: [organizationId], references: [id])
+  priority          TicketPriority
+  responseMinutes   Int
+  resolutionMinutes Int
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@unique([organizationId, priority])
 }
 
 model AiSuggestion {
-  id        String   @id @default(uuid())
-  ticketId  String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  content   String
-  sources   Json // fragmentos de documentos usados como contexto (RAG)
-  model     String // proveedor y modelo que generó la sugerencia
-  helpful   Boolean? // valoración del técnico, alimenta las métricas
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  ticketId      String
+  ticket        Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  content       String
+  sources       Json // fragmentos y tickets usados como contexto (RAG)
+  model         String // proveedor y modelo que generó la sugerencia
+  promptVersion String // versión del prompt, para comparar la calidad entre versiones
+  helpful       Boolean? // valoración del técnico, alimenta las métricas
+  createdAt     DateTime @default(now())
 }
 
 model KnowledgeDocument {
-  id           String          @id @default(uuid())
-  title        String
-  storageKey   String // ruta local o clave en S3
-  uploadedById String
-  uploadedBy   User            @relation(fields: [uploadedById], references: [id])
-  chunks       DocumentChunk[]
-  createdAt    DateTime        @default(now())
+  id             String          @id @default(uuid())
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  title          String
+  storageKey     String // ruta local o clave en S3
+  uploadedById   String
+  uploadedBy     User            @relation(fields: [uploadedById], references: [id])
+  chunks         DocumentChunk[]
+  createdAt      DateTime        @default(now())
+
+  @@index([organizationId])
 }
 
 model DocumentChunk {
-  id             String                      @id @default(uuid())
+  id             String                       @id @default(uuid())
   documentId     String
-  document       KnowledgeDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document       KnowledgeDocument            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   content        String
   position       Int
-  embedding      Unsupported("vector(768)")? // 768 = EMBEDDING_DIMENSIONS (nomic-embed-text por defecto, ver ADR 0004)
+  embedding      Unsupported("vector(1024)")? // 1024 = EMBEDDING_DIMENSIONS (bge-m3, ADR 0008)
   embeddingModel String? // modelo que generó el vector; no se mezclan modelos en una búsqueda
 }
+
+// Los índices HNSW de pgvector (Ticket.embedding y DocumentChunk.embedding) se crean con SQL
+// manual en la migración que los necesite, porque Prisma no los soporta.

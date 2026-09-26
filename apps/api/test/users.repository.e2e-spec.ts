@@ -15,8 +15,10 @@ describe('PrismaUsersRepository (integration)', () => {
   let moduleRef: TestingModule;
   let prisma: PrismaService;
   let repository: PrismaUsersRepository;
+  let organizationId: string;
 
   const newUserData = () => ({
+    organizationId,
     email: `${emailPrefix}${randomUUID()}@example.com`,
     name: 'Test User',
     passwordHash: 'not-a-real-hash',
@@ -38,12 +40,18 @@ describe('PrismaUsersRepository (integration)', () => {
 
     prisma = moduleRef.get(PrismaService);
     repository = moduleRef.get(PrismaUsersRepository);
+
+    const organization = await prisma.organization.create({
+      data: { name: 'Test Org', slug: `${emailPrefix}${randomUUID()}` },
+    });
+    organizationId = organization.id;
   });
 
   afterAll(async () => {
     await prisma.user.deleteMany({
       where: { email: { startsWith: emailPrefix } },
     });
+    await prisma.organization.delete({ where: { id: organizationId } });
     await moduleRef.close();
   });
 
@@ -53,6 +61,7 @@ describe('PrismaUsersRepository (integration)', () => {
     const user = await repository.create(data);
 
     expect(user).toMatchObject({
+      organizationId,
       email: data.email,
       name: data.name,
       role: Role.User,

@@ -7,6 +7,7 @@ import { Role, type User } from './user.types.js';
 describe('UsersService', () => {
   const user: User = {
     id: 'user-1',
+    organizationId: 'org-1',
     email: 'ana@example.com',
     name: 'Ana',
     role: Role.User,
@@ -14,6 +15,7 @@ describe('UsersService', () => {
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
   const input: CreateUserInput = {
+    organizationId: 'org-1',
     email: 'Ana@Example.com',
     name: 'Ana',
     password: 'secret-password',
@@ -76,6 +78,14 @@ describe('UsersService', () => {
         EmailAlreadyInUseError,
       );
       expect(usersRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('creates the user in the given organization', async () => {
+      await service.create(input);
+
+      expect(usersRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ organizationId: 'org-1' }),
+      );
     });
 
     it('returns the user created by the repository', async () => {

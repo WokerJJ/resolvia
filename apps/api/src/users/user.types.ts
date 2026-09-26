@@ -14,6 +14,8 @@ export type Role = (typeof Role)[keyof typeof Role];
 /** A user as the rest of the app sees it: never includes the password hash. */
 export interface User {
   id: string;
+  /** Each user belongs to exactly one organization (ADR 0005). */
+  organizationId: string;
   email: string;
   name: string;
   role: Role;
@@ -23,6 +25,7 @@ export interface User {
 
 /** Data the repository needs to store a new user (password already hashed). */
 export interface CreateUserData {
+  organizationId: string;
   email: string;
   name: string;
   passwordHash: string;

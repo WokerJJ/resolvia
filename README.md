@@ -175,10 +175,10 @@ npm run start:dev
 # 5. (Opcional) Levantar el modelo local de IA
 docker compose --profile ai up -d
 docker compose exec ollama ollama pull llama3.2:3b
-docker compose exec ollama ollama pull nomic-embed-text
+docker compose exec ollama ollama pull bge-m3
 ```
 
-`llama3.2:3b` es un modelo liviano solo para desarrollo. El modelo de embeddings pasará a `bge-m3` con la migración de multi-organización (ADR 0008).
+`llama3.2:3b` es un modelo liviano solo para desarrollo. Los embeddings usan `bge-m3`, multilingüe y de 1024 dimensiones (ADR 0008).
 
 ## Hoja de ruta
 

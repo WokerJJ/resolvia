@@ -12,7 +12,8 @@ describe('validateEnv', () => {
     expect(env.PORT).toBe(3000);
     expect(env.JWT_EXPIRES_IN).toBe('1d');
     expect(env.LLM_PROVIDER).toBe(LlmProviderName.OpenAICompatible);
-    expect(env.EMBEDDING_DIMENSIONS).toBe(768);
+    expect(env.EMBEDDING_MODEL).toBe('bge-m3');
+    expect(env.EMBEDDING_DIMENSIONS).toBe(1024);
   });
 
   it('converts numeric strings to numbers', () => {
