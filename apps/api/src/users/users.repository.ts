@@ -18,6 +18,7 @@ export abstract class UsersRepository {
 /** Columns returned to the app: everything except passwordHash. */
 const publicUserFields = {
   id: true,
+  organizationId: true,
   email: true,
   name: true,
   role: true,

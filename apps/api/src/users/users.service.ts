@@ -10,6 +10,7 @@ const BCRYPT_ROUNDS = 10;
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
 export interface CreateUserInput {
+  organizationId: string;
   email: string;
   name: string;
   password: string; // plain text: it must never reach the repository
@@ -29,6 +30,7 @@ export class UsersService {
 
     const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
     return this.usersRepository.create({
+      organizationId: input.organizationId,
       email,
       name: input.name,
       passwordHash,
