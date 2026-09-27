@@ -36,6 +36,7 @@ describe('AuthService', () => {
   const usersService = {
     create: vi.fn<UsersService['create']>(),
     verifyCredentials: vi.fn<UsersService['verifyCredentials']>(),
+    findById: vi.fn<UsersService['findById']>(),
   };
   const organizationsService = {
     findBySlug: vi.fn<OrganizationsService['findBySlug']>(),
@@ -143,6 +144,15 @@ describe('AuthService', () => {
       await expect(
         service.login(user.email, 'wrong-password'),
       ).rejects.toBeInstanceOf(InvalidCredentialsError);
+    });
+  });
+
+  describe('getCurrentUser', () => {
+    it('returns the user found by id', async () => {
+      usersService.findById.mockResolvedValue(user);
+
+      await expect(service.getCurrentUser(user.id)).resolves.toBe(user);
+      expect(usersService.findById).toHaveBeenCalledWith(user.id);
     });
   });
 });

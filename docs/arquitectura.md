@@ -22,7 +22,7 @@ La misma base de código funciona en dos modos (ADR 0005): **on-premise**, con u
 | `health` | `GET /api/health`: disponibilidad de la API y la base de datos | ✅ |
 | `users` | Usuarios y roles; contraseñas cifradas con bcrypt | ✅ |
 | `organizations` | Organizaciones y contexto de organización de cada petición (`OrganizationContext`) | ✅ |
-| `auth` | Registro, login, JWT con `organizationId` y guards por rol | ⏳ Fase 1 |
+| `auth` | Registro, login, JWT con `organizationId` y guards globales por rol (`@Public()`, `@Roles()`) | ✅ |
 | `categories` | Categorías configurables por organización | ⏳ Fase 1 |
 | `tickets` | Ciclo de vida, asignación, comentarios públicos e internos, historial (`TicketEvent`) y SLA | ⏳ Fase 1 |
 | `jobs` | Cola de trabajos con pg-boss y registro de los trabajos del worker | ⏳ Fase 3 |

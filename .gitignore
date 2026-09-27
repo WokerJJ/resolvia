@@ -28,3 +28,6 @@ Thumbs.db
 
 # Documentos subidos localmente
 uploads/
+
+# Memoria de trabajo de los agentes de revisión (no se versiona)
+.claude/agentes/

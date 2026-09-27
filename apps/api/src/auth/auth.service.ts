@@ -58,6 +58,14 @@ export class AuthService {
     return this.issueToken(user);
   }
 
+  /**
+   * Profile of the caller. Runs inside the organization scope set by
+   * JwtAuthGuard, so a user of another organization is never returned.
+   */
+  getCurrentUser(userId: string): Promise<User | null> {
+    return this.usersService.findById(userId);
+  }
+
   private async issueToken(user: User): Promise<AuthResult> {
     const payload: JwtPayload = {
       sub: user.id,

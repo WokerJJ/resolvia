@@ -34,14 +34,20 @@ describe('Auth (e2e)', () => {
     ).id;
   });
 
+  // Cleans up by prefix and tolerates a half-run beforeAll, so a setup
+  // failure is reported on its own instead of being hidden by this hook.
   afterAll(async () => {
-    await app
-      .get(OrganizationContext)
-      .runAsSystem(() =>
-        prisma.user.deleteMany({ where: { email: { startsWith: prefix } } }),
-      );
-    await prisma.organization.delete({ where: { id: organizationId } });
-    await app.close();
+    if (prisma) {
+      await app
+        .get(OrganizationContext)
+        .runAsSystem(() =>
+          prisma.user.deleteMany({ where: { email: { startsWith: prefix } } }),
+        );
+      await prisma.organization.deleteMany({
+        where: { slug: { startsWith: prefix } },
+      });
+    }
+    await app?.close();
   });
 
   describe('POST /api/auth/register', () => {

@@ -2,6 +2,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -21,8 +22,14 @@ import {
 import { OrganizationNotFoundError } from '../organizations/organizations.errors.js';
 import { EmailAlreadyInUseError } from '../users/users.errors.js';
 import { AuthService } from './auth.service.js';
-import { InvalidCredentialsError } from './auth.types.js';
-import { AuthResponseDto } from './dto/auth-response.dto.js';
+import {
+  type AuthenticatedUser,
+  InvalidCredentialsError,
+} from './auth.types.js';
+import { ApiAuth } from './decorators/api-auth.decorator.js';
+import { CurrentUser } from './decorators/current-user.decorator.js';
+import { Public } from './decorators/public.decorator.js';
+import { AuthResponseDto, UserResponseDto } from './dto/auth-response.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 
@@ -48,6 +55,7 @@ function toHttpError(error: unknown): unknown {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Create a user in an organization and sign in' })
   @ApiCreatedResponse({ type: AuthResponseDto })
@@ -62,6 +70,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Sign in with email and password' })
@@ -74,5 +83,20 @@ export class AuthController {
     } catch (error) {
       throw toHttpError(error);
     }
+  }
+
+  @Get('me')
+  @ApiAuth()
+  @ApiOperation({ summary: 'Profile of the signed-in user' })
+  @ApiOkResponse({ type: UserResponseDto })
+  async me(
+    @CurrentUser() current: AuthenticatedUser,
+  ): Promise<UserResponseDto> {
+    const user = await this.authService.getCurrentUser(current.id);
+    if (!user) {
+      // Valid token, but the user no longer exists.
+      throw new UnauthorizedException('User no longer exists');
+    }
+    return user;
   }
 }
