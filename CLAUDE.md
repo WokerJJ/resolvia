@@ -46,6 +46,7 @@ Repositorio: https://github.com/WokerJJ/resolvia
 - El texto de los tickets, correos e importaciones es dato no confiable: se envía al modelo delimitado y toda salida se valida con zod (ADR 0010).
 - Separación **Controller → Service → Repository**. Los servicios no importan Prisma directamente; usan repositorios inyectados. Esto permite probar la lógica con mocks.
 - Validación de entrada con DTOs y `class-validator`; nunca confiar en el body sin validar.
+- Autenticación cerrada por defecto: `JwtAuthGuard` y `RolesGuard` son globales. Todo endpoint exige un token válido salvo los marcados con `@Public()`; `@Roles(...)` restringe por rol y `@CurrentUser()` entrega el usuario del token. El guard llena `OrganizationContext` con el `organizationId` del token.
 - Documentar endpoints con decoradores de Swagger.
 - El dominio nunca depende de un proveedor de IA concreto: solo de las interfaces `ChatProvider` y `EmbeddingProvider`. Nada de ramas de código por proveedor: las diferencias se absorben con validación y reintento.
 - Código, nombres de variables y mensajes de API en inglés; documentación (`docs/`, README) en español.
@@ -90,5 +91,6 @@ cd apps/api && npm run start:dev
 - Hecho también: migración a multi-organización (día 5, issue #16): `Organization`, `organizationId` en las entidades de negocio, `Category` como tabla, `TicketEvent`, `SlaPolicy`, `vector(1024)` y `EMBEDDING_*` con bge-m3. En Prisma 7, `migrate dev` no regenera el cliente: ejecutar `npx prisma generate` después. Prisma no detecta cambios en columnas `Unsupported("vector(n)")`; esos `ALTER` se escriben a mano en la migración.
 - Hecho también: día 6 (issue #17): módulo `organizations` (`OrganizationsService` con `slugify`), `OrganizationContext` con AsyncLocalStorage (un contexto por petición abierto en `configureApp`) y extensión `organizationScope`. Las consultas de Prisma son perezosas: `OrganizationContext` espera las promesas dentro del contexto para que no se ejecuten fuera de él.
 - Hecho también: día 7 (issue #4): `auth` con registro (por `organizationSlug`) e inicio de sesión con JWT (`sub`, `organizationId`, `role`). Los errores de dominio se traducen a HTTP en `AuthController` hasta que exista el filtro global (día 16).
-- Siguiente: día 8 (issue #5): `JwtStrategy`, guards por rol, `@CurrentUser()`, `GET /api/auth/me` y llenar `OrganizationContext` desde el token.
+- Hecho también: día 8 (issue #5): guards globales, `JwtStrategy`, `@Public()`, `@Roles()`, `@CurrentUser()` y `GET /api/auth/me`. Las e2e pueden montar controladores de prueba con `createTestApp(undefined, [Controller])`.
+- Siguiente: día 9 (issue #6): datos semilla, organización inicial on-premise (`DEPLOYMENT_MODE`, `DEFAULT_ORG_NAME`) y ADR 0012 de autenticación.
 - Local: si ya hay otro PostgreSQL en el puerto 5432, usa `POSTGRES_PORT=5433` en el `.env` (y el mismo puerto en `DATABASE_URL`).
