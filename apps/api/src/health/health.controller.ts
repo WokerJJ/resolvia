@@ -5,9 +5,12 @@ import {
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator.js';
 import { HealthStatusDto } from './dto/health-status.dto.js';
 import { HealthService } from './health.service.js';
 
+// Public: load balancers call it without a token.
+@Public()
 @ApiTags('health')
 @Controller('health')
 export class HealthController {

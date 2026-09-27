@@ -27,3 +27,10 @@ export class InvalidCredentialsError extends Error {
     this.name = 'InvalidCredentialsError';
   }
 }
+
+/** The caller of a request, taken from a valid access token (no database hit). */
+export interface AuthenticatedUser {
+  id: string;
+  organizationId: string;
+  role: Role;
+}
