@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
@@ -27,6 +26,7 @@ import {
   type AuthenticatedUser,
   InvalidCredentialsError,
 } from './auth.types.js';
+import { ApiAuth } from './decorators/api-auth.decorator.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import { Public } from './decorators/public.decorator.js';
 import { AuthResponseDto, UserResponseDto } from './dto/auth-response.dto.js';
@@ -86,10 +86,9 @@ export class AuthController {
   }
 
   @Get('me')
-  @ApiBearerAuth()
+  @ApiAuth()
   @ApiOperation({ summary: 'Profile of the signed-in user' })
   @ApiOkResponse({ type: UserResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing, invalid or expired token' })
   async me(
     @CurrentUser() current: AuthenticatedUser,
   ): Promise<UserResponseDto> {
