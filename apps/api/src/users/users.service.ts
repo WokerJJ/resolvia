@@ -5,7 +5,7 @@ import { UsersRepository } from './users.repository.js';
 import { EmailAlreadyInUseError } from './users.errors.js';
 
 /** bcrypt cost factor: each +1 doubles the time needed to compute (and to brute-force) a hash. */
-const BCRYPT_ROUNDS = 10;
+export const BCRYPT_ROUNDS = 10;
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 

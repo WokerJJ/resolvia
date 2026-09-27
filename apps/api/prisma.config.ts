@@ -7,7 +7,11 @@ config({ path: path.resolve(import.meta.dirname, '../../.env'), quiet: true });
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
-  migrations: { path: 'prisma/migrations' },
+  migrations: {
+    path: 'prisma/migrations',
+    // Datos de desarrollo: `npm run db:seed` (nunca en producción).
+    seed: 'tsx prisma/seed.ts',
+  },
   // Se lee sin el helper env() para que `prisma generate` (postinstall) funcione
   // sin .env; los comandos que sí usan la base de datos fallan si falta la URL.
   datasource: { url: process.env.DATABASE_URL },
