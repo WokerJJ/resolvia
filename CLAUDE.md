@@ -48,6 +48,7 @@ Repositorio: https://github.com/WokerJJ/resolvia
 - Toda funcionalidad nueva lleva pruebas: unitarias para servicios (`*.spec.ts` junto al código, `npm test`) y e2e o de integración para endpoints y repositorios (`apps/api/test/*.e2e-spec.ts`, `npm run test:e2e`, contra la base de datos real).
 - Mocks con la API de Vitest (`vi.fn()`, `vi.spyOn()`). Las pruebas nunca llaman a un modelo real: usan `FakeChatProvider` y `FakeEmbeddingProvider`.
 - Las e2e usan `test/utils/create-test-app.ts` (aplica `configureApp` igual que `main.ts`; acepta providers sustitutos y controladores de prueba). Cada prueba crea sus datos con un prefijo único y los borra al terminar (con `runAsSystem` para modelos con organización).
+- Las e2e corren con `DEPLOYMENT_MODE=cloud` (fijado en `vitest.config.e2e.ts`) para que la organización inicial on-premise no se cree en la base compartida; el bootstrap se prueba aparte en `test/initial-organization.e2e-spec.ts`, sobre un esquema PostgreSQL propio.
 - Antes de dar una tarea por terminada deben pasar en `apps/api`: `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:e2e` y `npm run build`.
 
 ## Git y flujo de trabajo
@@ -84,6 +85,7 @@ cd apps/api && npm run db:seed              # datos de prueba; exige ALLOW_DEV_S
 - **Prisma y pgvector:** Prisma no detecta cambios en columnas `Unsupported("vector(n)")`. Esos `ALTER` se escriben a mano en la migración, y conviene revisar el SQL generado antes de aplicarlo.
 - **Consultas perezosas:** una consulta de Prisma se ejecuta al hacer `await`, no al llamarla. `OrganizationContext` espera las promesas dentro del contexto; no devuelvas consultas sin esperar fuera de él.
 - **npm 11 / Node 24:** el lock se genera con npm 11. Con Node 20 (npm 10), `npm ci` falla por diferencias en las *peer dependencies*.
+- **Seed de desarrollo:** `npm run db:seed` falla si el `.env` de la raíz no tiene `ALLOW_DEV_SEED=true` (en `.env.example` está comentada a propósito). `NODE_ENV` no se define en este proyecto, así que no sirve como barrera.
 - **Prettier** reformatea `apps/api/src/users/users.module.ts` (solo formato); no lo mezcles en commits de otro tema.
 
 ## Estado actual
@@ -98,5 +100,5 @@ cd apps/api && npm run db:seed              # datos de prueba; exige ALLOW_DEV_S
   - Modo de despliegue (`DEPLOYMENT_MODE`): en `onprem`, la organización `DEFAULT_ORG_NAME` se crea al arrancar.
   - Seed de desarrollo (`npm run db:seed`): un usuario por rol, categorías base y SLA por defecto.
   - Esquema multi-organización (categorías como tabla, historial, SLA, `vector(1024)`).
-- **Siguiente:** revisión del día 9 con el equipo de agentes y su PR. Después, el día 10 (issue #18): categorías configurables. Pendiente anotado en el ADR 0012: endurecimiento del JWT (`issuer`/`audience`, exigir `exp`, pruebas de algoritmo) y cómo crear el primer administrador on-premise.
+- **Siguiente:** el día 9 ya pasó la revisión del equipo de agentes (BUG-002, BUG-003 y EVA-006 a EVA-009 corregidos); falta el PR a `develop` (preguntar a Jhon). Después, el día 10 (issue #18): categorías configurables. Pendiente anotado en el ADR 0012: endurecimiento del JWT (`issuer`/`audience`, exigir `exp`, pruebas de algoritmo) y cómo crear el primer administrador on-premise.
 - El detalle día a día está en el registro de `docs/plan-diario.md`.
