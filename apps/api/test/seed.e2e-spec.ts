@@ -8,6 +8,7 @@ import {
   seedDevelopmentData,
 } from '../prisma/seed/development-data.js';
 import { OrganizationContext } from '../src/organizations/organization-context.js';
+import { slugify } from '../src/organizations/organizations.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp } from './utils/create-test-app.js';
 
@@ -79,6 +80,39 @@ describe('Development seed (e2e)', () => {
       categories: 7,
       slaPolicies: 4,
     });
+  });
+
+  it('refuses an organization that already has other users and changes nothing', async () => {
+    // A real installation: its organization already exists with its own users.
+    const name = `${prefix}${randomUUID()}`;
+    const realOrganization = await prisma.organization.create({
+      data: { name, slug: slugify(name) },
+    });
+    await context.runForOrganization(realOrganization.id, () =>
+      prisma.user.create({
+        data: {
+          organizationId: realOrganization.id,
+          email: `${prefix}${randomUUID()}@real.test`,
+          name: 'Real user',
+          passwordHash: 'not-a-real-hash',
+        },
+      }),
+    );
+
+    await expect(
+      seedDevelopmentData(prisma, context, {
+        organizationName: name,
+        emailDomain: `${prefix}${randomUUID()}.test`,
+      }),
+    ).rejects.toThrow(/already has users/);
+
+    await expect(
+      context.runForOrganization(realOrganization.id, async () => ({
+        users: await prisma.user.count(),
+        categories: await prisma.category.count(),
+        slaPolicies: await prisma.slaPolicy.count(),
+      })),
+    ).resolves.toEqual({ users: 1, categories: 0, slaPolicies: 0 });
   });
 
   it.each([

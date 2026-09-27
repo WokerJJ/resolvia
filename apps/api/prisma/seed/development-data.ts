@@ -52,6 +52,10 @@ export interface DevelopmentSeedResult {
  * Creates or updates the development data. Idempotent: it upserts by natural
  * keys (slug, email, category name, priority), so running it again resets the
  * seeded rows to these values without duplicating them.
+ *
+ * @throws Error, without writing anything, if the organization already has
+ * users other than the seeded ones: it is a real organization, and the seed
+ * would add an ADMIN with a public password to it.
  */
 export async function seedDevelopmentData(
   prisma: PrismaService,
@@ -67,14 +71,27 @@ export async function seedDevelopmentData(
     select: { id: true, name: true, slug: true },
   });
 
-  const passwordHash = await bcrypt.hash(DEVELOPMENT_PASSWORD, BCRYPT_ROUNDS);
+  const emailOf = (user: (typeof USERS)[number]) =>
+    `${user.localPart}@${options.emailDomain}`.toLowerCase();
 
   // Everything else belongs to the organization, so it is written inside its
   // scope: organizationScope checks each row (ADR 0005).
   const users = await context.runForOrganization(organization.id, async () => {
+    const foreignUser = await prisma.user.findFirst({
+      where: { email: { notIn: USERS.map(emailOf) } },
+      select: { id: true },
+    });
+    if (foreignUser) {
+      throw new Error(
+        `The organization "${organization.name}" already has users that the seed did not create; ` +
+          'the development seed only runs on development organizations.',
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(DEVELOPMENT_PASSWORD, BCRYPT_ROUNDS);
     const seeded: DevelopmentSeedResult['users'] = [];
     for (const user of USERS) {
-      const email = `${user.localPart}@${options.emailDomain}`.toLowerCase();
+      const email = emailOf(user);
       await prisma.user.upsert({
         where: { email },
         create: {

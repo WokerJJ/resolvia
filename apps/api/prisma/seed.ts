@@ -1,8 +1,9 @@
 /**
  * Development seed: `npm run db:seed` (or `npx prisma db seed`) from apps/api.
  * Creates the organization DEFAULT_ORG_NAME with one user per role, base
- * categories and the default SLA. Never run it in production: its passwords
- * are public.
+ * categories and the default SLA. Development only: its passwords are public.
+ * It requires ALLOW_DEV_SEED=true in .env, refuses NODE_ENV=production and
+ * refuses an organization that already has users other than the seeded ones.
  */
 import path from 'node:path';
 import { config } from 'dotenv';
@@ -13,14 +14,18 @@ import {
   DEVELOPMENT_PASSWORD,
   seedDevelopmentData,
 } from './seed/development-data.js';
+import { assertDevelopmentSeedAllowed } from './seed/development-seed-guard.js';
 
 config({
   path: path.resolve(import.meta.dirname, '../../../.env'),
   quiet: true,
 });
 
-if (process.env.NODE_ENV === 'production') {
-  console.error('The development seed does not run with NODE_ENV=production.');
+// Checked before connecting: without the explicit opt-in nothing is touched.
+try {
+  assertDevelopmentSeedAllowed(process.env);
+} catch (error) {
+  console.error((error as Error).message);
   process.exit(1);
 }
 

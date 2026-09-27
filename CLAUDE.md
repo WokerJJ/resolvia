@@ -73,7 +73,7 @@ docker compose --profile ai up -d           # Ollama (opcional)
 cd apps/api && npm run start:dev            # API en http://localhost:3000/api (Swagger en /api/docs)
 cd apps/api && npx prisma migrate dev --name <nombre>
 cd apps/api && npx prisma generate          # obligatorio después de migrar (ver trampas)
-cd apps/api && npm run db:seed              # datos de prueba (credenciales en el README)
+cd apps/api && npm run db:seed              # datos de prueba; exige ALLOW_DEV_SEED=true en el .env (credenciales en el README)
 ```
 
 `scripts/bootstrap.sh` solo sirvió para generar las apps al inicio; no lo vuelvas a ejecutar sobre `apps/api` ni `apps/web`.
