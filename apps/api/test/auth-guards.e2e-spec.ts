@@ -43,6 +43,7 @@ describe('Auth guards (e2e)', () => {
   let prisma: PrismaService;
   let jwt: JwtService;
   let organizationId: string;
+  let otherOrganizationId: string;
   let userToken: string;
   let userId: string;
 
@@ -61,6 +62,11 @@ describe('Auth guards (e2e)', () => {
     const slug = `${prefix}${randomUUID()}`;
     organizationId = (
       await prisma.organization.create({ data: { name: 'Guards', slug } })
+    ).id;
+    otherOrganizationId = (
+      await prisma.organization.create({
+        data: { name: 'Other', slug: `${prefix}other-${randomUUID()}` },
+      })
     ).id;
 
     const response = await request(app.getHttpServer())
@@ -128,6 +134,16 @@ describe('Auth guards (e2e)', () => {
       );
 
       await get('/api/auth/me', expired).expect(401);
+    });
+
+    it('returns 401 when the token places a real user in another organization', async () => {
+      const crossOrganization = await jwt.signAsync({
+        sub: userId,
+        organizationId: otherOrganizationId,
+        role: Role.User,
+      } satisfies JwtPayload);
+
+      await get('/api/auth/me', crossOrganization).expect(401);
     });
 
     it('returns 401 when the user of a valid token no longer exists', async () => {
