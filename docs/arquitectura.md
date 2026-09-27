@@ -21,8 +21,8 @@ La misma base de código funciona en dos modos (ADR 0005): **on-premise**, con u
 | `prisma` | Cliente de Prisma 7 compartido (adaptador `pg`) con la extensión que filtra por organización | ✅ |
 | `health` | `GET /api/health`: disponibilidad de la API y la base de datos | ✅ |
 | `users` | Usuarios y roles; contraseñas cifradas con bcrypt | ✅ |
-| `organizations` | Organizaciones y contexto de organización de cada petición (`OrganizationContext`) | ✅ |
-| `auth` | Registro, login, JWT con `organizationId` y guards globales por rol (`@Public()`, `@Roles()`) | ✅ |
+| `organizations` | Organizaciones, contexto de organización de cada petición (`OrganizationContext`) y organización inicial en modo on-premise (`DEPLOYMENT_MODE`, `DEFAULT_ORG_NAME`) | ✅ |
+| `auth` | Registro, login, JWT con `organizationId` y guards globales por rol (`@Public()`, `@Roles()`); el usuario y su rol se leen de la base de datos en cada petición (ADR 0012) | ✅ |
 | `categories` | Categorías configurables por organización | ⏳ Fase 1 |
 | `tickets` | Ciclo de vida, asignación, comentarios públicos e internos, historial (`TicketEvent`) y SLA | ⏳ Fase 1 |
 | `jobs` | Cola de trabajos con pg-boss y registro de los trabajos del worker | ⏳ Fase 3 |
