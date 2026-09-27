@@ -38,7 +38,7 @@ Repositorio: https://github.com/WokerJJ/resolvia
 - Separación **Controller → Service → Repository**. Los servicios no importan Prisma: dependen de repositorios definidos como **clases abstractas** (tokens de inyección) e implementados con Prisma. Los servicios lanzan **errores de dominio**, no errores HTTP.
 - **Multi-organización (ADR 0005):** toda entidad de negocio lleva `organizationId` y el filtro lo aplica la extensión de Prisma `organizationScope` (`src/prisma/organization-scope.ts`), nunca a mano. Deniega por defecto: sin organización en `OrganizationContext` la consulta falla. Lo global (login por correo, seeds, trabajos del sistema) se ejecuta con `OrganizationContext.runAsSystem`. Los modelos hijos (Comment, TicketEvent, AiSuggestion, DocumentChunk) se alcanzan siempre a través de su padre. Al crear, se pasa `organizationId` explícito: los tipos lo exigen y la extensión verifica que coincida.
 - **Autenticación cerrada por defecto:** `JwtAuthGuard` y `RolesGuard` son globales. Todo endpoint exige token salvo los marcados con `@Public()`; `@Roles(...)` restringe por rol y `@CurrentUser()` entrega el usuario del token. El guard llena `OrganizationContext` con el `organizationId` del token.
-- Validación de entrada con DTOs y `class-validator` (`whitelist` + `forbidNonWhitelisted`: un campo no declarado da 400). Documentar endpoints con decoradores de Swagger.
+- Validación de entrada con DTOs y `class-validator` (`whitelist` + `forbidNonWhitelisted`: un campo no declarado da 400). Documentar endpoints con decoradores de Swagger; las operaciones protegidas llevan `@ApiAuth()` (a nivel de clase o de método) y `@Roles()` ya documenta su 403. `test/swagger.e2e-spec.ts` lo verifica: al crear un endpoint `@Public()`, agrégalo a su lista `PUBLIC_OPERATIONS`.
 - Nada lento dentro de la petición: lo que depende del modelo o de servicios externos va a la cola (ADR 0007).
 - El texto de los tickets, correos e importaciones es dato no confiable: se envía al modelo delimitado y toda salida se valida con zod (ADR 0010). El dominio nunca depende de un proveedor de IA concreto; nada de ramas de código por proveedor.
 - Código, nombres y mensajes de API en inglés; documentación (`docs/`, README) en español. Sin `any` salvo justificación en comentario.
@@ -87,7 +87,7 @@ cd apps/api && npx prisma generate          # obligatorio después de migrar (ve
 
 ## Estado actual
 
-- **Fase 1 — MVP del backend** (v0.1.0 prevista para el 19/10/2026). Días 1–7 integrados en `develop`; el día 8 está en la rama `feat/auth-guards`, pendiente de revisión y push.
+- **Fase 1 — MVP del backend** (v0.1.0 prevista para el 19/10/2026). Días 1–7 integrados en `develop`. El día 8 (issue #5) está en el **PR #26**, revisado por el equipo de agentes, con los hallazgos EVA-001/002/004/005 corregidos y la CI en verde: **pendiente de merge** (preguntar a Jhon).
 - **Qué funciona:**
   - Configuración validada al arrancar.
   - `GET /api/health`.
@@ -95,5 +95,5 @@ cd apps/api && npx prisma generate          # obligatorio después de migrar (ve
   - `GET /api/auth/me` y guards globales por rol.
   - Organizaciones y aislamiento por organización en cada consulta.
   - Esquema multi-organización (categorías como tabla, historial, SLA, `vector(1024)`).
-- **Siguiente:** día 9 (issue #6): datos semilla, organización inicial on-premise (`DEPLOYMENT_MODE`, `DEFAULT_ORG_NAME`) y ADR 0012. Después, el día 10 (issue #18): categorías configurables.
+- **Siguiente:** tras el merge del PR #26, día 9 (issue #6): datos semilla, organización inicial on-premise (`DEPLOYMENT_MODE`, `DEFAULT_ORG_NAME`), ADR 0012 y **BUG-001**: `JwtStrategy` debe cargar el usuario y usar su rol actual de la base de datos, porque hoy confía en el rol del token (ver `.claude/agentes/hallazgos.md`). Después, el día 10 (issue #18): categorías configurables.
 - El detalle día a día está en el registro de `docs/plan-diario.md`.
