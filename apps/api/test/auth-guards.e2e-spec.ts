@@ -46,13 +46,29 @@ describe('Auth guards (e2e)', () => {
   let otherOrganizationId: string;
   let userToken: string;
   let userId: string;
+  let adminToken: string;
+  let technicianToken: string;
 
   const get = (path: string, token?: string) => {
     const req = request(app.getHttpServer()).get(path);
     return token ? req.set('Authorization', `Bearer ${token}`) : req;
   };
-  const tokenFor = (role: Role, sub = randomUUID()) =>
+  const tokenFor = (role: Role, sub: string = randomUUID()) =>
     jwt.signAsync({ sub, organizationId, role } satisfies JwtPayload);
+
+  /** Inserts a user with the given role directly: there is no endpoint for it yet. */
+  const createUser = (role: Role) =>
+    app.get(OrganizationContext).runForOrganization(organizationId, () =>
+      prisma.user.create({
+        data: {
+          organizationId,
+          email: `${prefix}${randomUUID()}@example.com`,
+          name: role,
+          passwordHash: 'not-a-real-hash',
+          role,
+        },
+      }),
+    );
 
   beforeAll(async () => {
     app = await createTestApp(undefined, [GuardProbeController]);
@@ -81,6 +97,11 @@ describe('Auth guards (e2e)', () => {
     const body = response.body as { accessToken: string; user: { id: string } };
     userToken = body.accessToken;
     userId = body.user.id;
+
+    const admin = await createUser(Role.Admin);
+    adminToken = await tokenFor(Role.Admin, admin.id);
+    const technician = await createUser(Role.Technician);
+    technicianToken = await tokenFor(Role.Technician, technician.id);
   });
 
   // Cleans up by prefix and tolerates a half-run beforeAll, so a setup
@@ -166,17 +187,54 @@ describe('Auth guards (e2e)', () => {
     });
 
     it('allows the listed role', async () => {
-      await get('/api/guard-probe/admin', await tokenFor(Role.Admin)).expect(
-        200,
-      );
+      await get('/api/guard-probe/admin', adminToken).expect(200);
     });
 
     it('allows any of several listed roles', async () => {
-      await get(
-        '/api/guard-probe/staff',
-        await tokenFor(Role.Technician),
-      ).expect(200);
+      await get('/api/guard-probe/staff', technicianToken).expect(200);
       await get('/api/guard-probe/staff', userToken).expect(403);
+    });
+  });
+
+  // BUG-001: the token only says who the caller was; the database says who
+  // they are now (ADR 0012).
+  describe('current state of the user', () => {
+    it('returns 403 when a USER presents a token that claims ADMIN', async () => {
+      const claimsAdmin = await tokenFor(Role.Admin, userId);
+
+      await get('/api/guard-probe/admin', claimsAdmin).expect(403);
+    });
+
+    it('uses the current role after it changes, with the same token', async () => {
+      const promoted = await createUser(Role.User);
+      const token = await tokenFor(Role.User, promoted.id);
+      await get('/api/guard-probe/admin', token).expect(403);
+
+      await app
+        .get(OrganizationContext)
+        .runForOrganization(organizationId, () =>
+          prisma.user.update({
+            where: { id: promoted.id },
+            data: { role: Role.Admin },
+          }),
+        );
+
+      await get('/api/guard-probe/admin', token).expect(200);
+    });
+
+    it('returns 401 on any protected endpoint once the user is deleted', async () => {
+      const deleted = await createUser(Role.Admin);
+      const token = await tokenFor(Role.Admin, deleted.id);
+      await get('/api/guard-probe/admin', token).expect(200);
+
+      await app
+        .get(OrganizationContext)
+        .runForOrganization(organizationId, () =>
+          prisma.user.delete({ where: { id: deleted.id } }),
+        );
+
+      await get('/api/guard-probe/admin', token).expect(401);
+      await get('/api/guard-probe/scope', token).expect(401);
     });
   });
 
