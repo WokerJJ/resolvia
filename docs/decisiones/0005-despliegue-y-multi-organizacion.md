@@ -17,6 +17,8 @@ El modelo de datos actual no tiene el concepto de organización: usuarios, ticke
 - **Nube:** varias organizaciones en la misma base de datos.
 - La variable `DEPLOYMENT_MODE` (`onprem` | `cloud`) activa lo que cambia entre modos, por ejemplo si se permite registrar organizaciones nuevas. Se agrega y valida cuando se implemente.
 
+> **Actualización (27/09/2026):** `DEPLOYMENT_MODE` ya está implementada y se valida al arrancar. En modo `onprem`, `InitialOrganizationBootstrap` crea la organización `DEFAULT_ORG_NAME` en el primer arranque, si la instalación aún no tiene ninguna; en modo `cloud` no crea nada.
+
 ### Usuarios y autenticación
 
 - El **correo es único global** y cada usuario pertenece a **una sola organización**. Así el inicio de sesión no necesita elegir organización: el correo la determina.
@@ -27,6 +29,8 @@ El modelo de datos actual no tiene el concepto de organización: usuarios, ticke
 - El filtrado por organización se centraliza en una **extensión del cliente de Prisma** que agrega `organizationId` a las consultas de los modelos de negocio a partir del contexto de la petición. Los repositorios no repiten el filtro a mano, así que olvidarlo no filtra datos entre organizaciones.
 - La extensión **deniega por defecto**: una consulta a un modelo con organización sin organización en el contexto falla, en lugar de devolver filas de todas. Las operaciones realmente globales (buscar el correo al iniciar sesión, seeds, trabajos del sistema) lo declaran de forma explícita.
 - En la fase de nube se evaluará además **Row Level Security** de PostgreSQL como segunda barrera, dentro de la propia base de datos.
+
+> **Actualización (27/09/2026):** el seed de desarrollo no usa `runAsSystem`: crea (o reutiliza) la organización y escribe usuarios, categorías y SLA dentro de su alcance, con `runForOrganization`, de modo que la extensión verifica cada fila. Además, solo corre con `ALLOW_DEV_SEED=true`.
 
 ### Esquema objetivo
 
