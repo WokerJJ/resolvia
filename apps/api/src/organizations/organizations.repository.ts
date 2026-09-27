@@ -16,6 +16,8 @@ export abstract class OrganizationsRepository {
   abstract create(data: CreateOrganizationData): Promise<Organization>;
   abstract findById(id: string): Promise<Organization | null>;
   abstract findBySlug(slug: string): Promise<Organization | null>;
+  /** Whether the installation has at least one organization. */
+  abstract hasAny(): Promise<boolean>;
 }
 
 @Injectable()
@@ -43,5 +45,12 @@ export class PrismaOrganizationsRepository implements OrganizationsRepository {
 
   findBySlug(slug: string): Promise<Organization | null> {
     return this.prisma.organization.findUnique({ where: { slug } });
+  }
+
+  async hasAny(): Promise<boolean> {
+    const first = await this.prisma.organization.findFirst({
+      select: { id: true },
+    });
+    return first !== null;
   }
 }

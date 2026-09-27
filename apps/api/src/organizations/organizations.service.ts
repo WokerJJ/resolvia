@@ -48,6 +48,27 @@ export class OrganizationsService {
     return this.organizationsRepository.create({ name, slug });
   }
 
+  /**
+   * On-premise, an installation has a single organization, created on the
+   * first start (ADR 0005). Returns it, or null if the installation already
+   * has an organization. Several instances starting at once are safe: the
+   * unique slug lets only one create it.
+   */
+  async createInitialOrganization(name: string): Promise<Organization | null> {
+    if (await this.organizationsRepository.hasAny()) {
+      return null;
+    }
+
+    try {
+      return await this.create({ name });
+    } catch (error) {
+      if (error instanceof OrganizationSlugInUseError) {
+        return null; // another instance created it first
+      }
+      throw error;
+    }
+  }
+
   findById(id: string): Promise<Organization | null> {
     return this.organizationsRepository.findById(id);
   }
