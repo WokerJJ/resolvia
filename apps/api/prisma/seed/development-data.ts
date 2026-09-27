@@ -1,9 +1,9 @@
-import bcrypt from 'bcrypt';
 import type { OrganizationContext } from '../../src/organizations/organization-context.js';
 import { slugify } from '../../src/organizations/organizations.service.js';
 import type { PrismaService } from '../../src/prisma/prisma.service.js';
+import { normalizeEmail } from '../../src/users/email.js';
+import { hashPassword } from '../../src/users/password.js';
 import { Role } from '../../src/users/user.types.js';
-import { BCRYPT_ROUNDS } from '../../src/users/users.service.js';
 
 /** Password of every seeded user. Development only: it is public in the README. */
 export const DEVELOPMENT_PASSWORD = 'resolvia-dev-2026';
@@ -72,7 +72,7 @@ export async function seedDevelopmentData(
   });
 
   const emailOf = (user: (typeof USERS)[number]) =>
-    `${user.localPart}@${options.emailDomain}`.toLowerCase();
+    normalizeEmail(`${user.localPart}@${options.emailDomain}`);
 
   // Everything else belongs to the organization, so it is written inside its
   // scope: organizationScope checks each row (ADR 0005).
@@ -88,7 +88,7 @@ export async function seedDevelopmentData(
       );
     }
 
-    const passwordHash = await bcrypt.hash(DEVELOPMENT_PASSWORD, BCRYPT_ROUNDS);
+    const passwordHash = await hashPassword(DEVELOPMENT_PASSWORD);
     const seeded: DevelopmentSeedResult['users'] = [];
     for (const user of USERS) {
       const email = emailOf(user);

@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import bcrypt from 'bcrypt';
+import { normalizeEmail } from './email.js';
+import { hashPassword } from './password.js';
 import type { User } from './user.types.js';
 import { UsersRepository } from './users.repository.js';
 import { EmailAlreadyInUseError } from './users.errors.js';
-
-/** bcrypt cost factor: each +1 doubles the time needed to compute (and to brute-force) a hash. */
-export const BCRYPT_ROUNDS = 10;
-
-const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 
 /**
  * Hash compared when the email does not exist, so a failed login takes about
@@ -15,7 +12,7 @@ const normalizeEmail = (email: string): string => email.trim().toLowerCase();
  */
 let dummyHash: string | undefined;
 const getDummyHash = async (): Promise<string> =>
-  (dummyHash ??= await bcrypt.hash('resolvia-timing-guard', BCRYPT_ROUNDS));
+  (dummyHash ??= await hashPassword('resolvia-timing-guard'));
 
 export interface CreateUserInput {
   organizationId: string;
@@ -36,7 +33,7 @@ export class UsersService {
       throw new EmailAlreadyInUseError(email);
     }
 
-    const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
+    const passwordHash = await hashPassword(input.password);
     return this.usersRepository.create({
       organizationId: input.organizationId,
       email,
