@@ -9,6 +9,11 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
  * Global guard: every endpoint requires a valid access token unless it is
  * marked with @Public(). On success it scopes the request to the organization
  * in the token, so every query that follows is filtered by it (ADR 0005).
+ *
+ * Depends on the middleware registered in configureApp (app.setup.ts), which
+ * opens a fresh organization scope for each request: without it,
+ * setOrganizationId throws MissingOrganizationContextError. Any app or test that
+ * skips configureApp must open that scope itself.
  */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
