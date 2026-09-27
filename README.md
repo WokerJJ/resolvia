@@ -114,7 +114,7 @@ Las tareas lentas (clasificación, embeddings, sugerencias, importaciones y corr
 | Quién opera | La institución (con soporte opcional) | El proveedor del servicio |
 | Pensado para | Instituciones con políticas estrictas de datos | Organizaciones sin equipo para administrar servidores |
 
-Los dos modos usan el mismo código; la diferencia es de configuración (ADR 0005).
+Los dos modos usan el mismo código; la diferencia es de configuración (ADR 0005): `DEPLOYMENT_MODE=onprem` o `cloud`. En modo on-premise, la API crea al primer arranque la organización de la instalación con el nombre de `DEFAULT_ORG_NAME`.
 
 ## Stack tecnológico
 
@@ -165,20 +165,39 @@ cp .env.example .env
 # 3. Levantar la base de datos
 docker compose up -d db
 
-# 4. Instalar la API, aplicar las migraciones y arrancarla
+# 4. Instalar la API y aplicar las migraciones
 cd apps/api
 npm install
 npx prisma migrate dev
+
+# 5. (Solo desarrollo) Cargar los datos de prueba: exige ALLOW_DEV_SEED=true en el .env
+npm run db:seed
+
+# 6. Arrancar la API
 npm run start:dev
 # http://localhost:3000/api/health y http://localhost:3000/api/docs
 
-# 5. (Opcional) Levantar el modelo local de IA
+# 7. (Opcional) Levantar el modelo local de IA
 docker compose --profile ai up -d
 docker compose exec ollama ollama pull llama3.2:3b
 docker compose exec ollama ollama pull bge-m3
 ```
 
 `llama3.2:3b` es un modelo liviano solo para desarrollo. Los embeddings usan `bge-m3`, multilingüe y de 1024 dimensiones (ADR 0008).
+
+### Credenciales de prueba (solo desarrollo)
+
+`npm run db:seed` crea la organización `DEFAULT_ORG_NAME` (por defecto, *Mi organización*) con un usuario por rol, siete categorías base y el SLA por defecto de cada prioridad. Se puede ejecutar las veces que haga falta: no duplica datos y restablece estas contraseñas.
+
+Es solo para desarrollo, así que exige una autorización explícita: `ALLOW_DEV_SEED=true` en el `.env` (en `.env.example` está comentada). Además, se niega a correr si la organización ya tiene usuarios que no son los del seed, para no añadir un administrador con contraseña pública a una organización real.
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Administrador | `admin@resolvia.test` | `resolvia-dev-2026` |
+| Técnico | `tecnico@resolvia.test` | `resolvia-dev-2026` |
+| Usuario | `usuario@resolvia.test` | `resolvia-dev-2026` |
+
+Para probar la API desde Swagger, inicia sesión con `POST /api/auth/login`, copia el `accessToken` y pégalo en **Authorize**. Estas credenciales son públicas: el seed también se niega a correr con `NODE_ENV=production`, y `ALLOW_DEV_SEED` nunca se activa en una instalación real.
 
 ## Hoja de ruta
 

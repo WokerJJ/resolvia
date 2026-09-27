@@ -44,6 +44,7 @@ describe('OrganizationsService', () => {
     create: vi.fn<OrganizationsRepository['create']>(),
     findById: vi.fn<OrganizationsRepository['findById']>(),
     findBySlug: vi.fn<OrganizationsRepository['findBySlug']>(),
+    hasAny: vi.fn<OrganizationsRepository['hasAny']>(),
   };
   const service = new OrganizationsService(
     organizationsRepository as OrganizationsRepository,
@@ -110,6 +111,51 @@ describe('OrganizationsService', () => {
       await expect(service.create({ name: organization.name })).resolves.toBe(
         organization,
       );
+    });
+  });
+
+  describe('createInitialOrganization', () => {
+    it('creates the organization when the installation has none', async () => {
+      organizationsRepository.hasAny.mockResolvedValue(false);
+      organizationsRepository.findBySlug.mockResolvedValue(null);
+      organizationsRepository.create.mockResolvedValue(organization);
+
+      await expect(
+        service.createInitialOrganization(' Institución Educativa San José '),
+      ).resolves.toBe(organization);
+      expect(organizationsRepository.create).toHaveBeenCalledWith({
+        name: 'Institución Educativa San José',
+        slug: 'institucion-educativa-san-jose',
+      });
+    });
+
+    it('does nothing when the installation already has an organization', async () => {
+      organizationsRepository.hasAny.mockResolvedValue(true);
+
+      await expect(
+        service.createInitialOrganization('Otra'),
+      ).resolves.toBeNull();
+      expect(organizationsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('returns null when another instance created it at the same time', async () => {
+      organizationsRepository.hasAny.mockResolvedValue(false);
+      organizationsRepository.findBySlug.mockResolvedValue(null);
+      organizationsRepository.create.mockRejectedValue(
+        new OrganizationSlugInUseError('otra'),
+      );
+
+      await expect(
+        service.createInitialOrganization('Otra'),
+      ).resolves.toBeNull();
+    });
+
+    it('propagates any other error', async () => {
+      organizationsRepository.hasAny.mockResolvedValue(false);
+
+      await expect(
+        service.createInitialOrganization('---'),
+      ).rejects.toBeInstanceOf(InvalidOrganizationNameError);
     });
   });
 

@@ -70,6 +70,12 @@ describe('PrismaOrganizationsRepository (integration)', () => {
     await expect(repository.findBySlug(created.slug)).resolves.toEqual(created);
   });
 
+  it('reports that the installation has organizations', async () => {
+    await repository.create(newOrganizationData());
+
+    await expect(repository.hasAny()).resolves.toBe(true);
+  });
+
   it('returns null when the organization does not exist', async () => {
     await expect(repository.findById(randomUUID())).resolves.toBeNull();
     await expect(

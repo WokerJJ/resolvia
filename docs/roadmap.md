@@ -18,6 +18,7 @@ Corre en paralelo al desarrollo; no lo bloquea.
 - [x] Multi-organización: migración al esquema objetivo del ADR 0005 (organizaciones, categorías como tabla, `vector(1024)`)
 - [x] Filtrado centralizado por organización
 - [x] Módulo `auth`: registro, login, JWT con `organizationId` y guards por rol
+- [x] Organización inicial en modo on-premise y datos semilla de desarrollo (ADR 0012 documenta la autenticación)
 - [ ] Módulo `tickets`: creación, consulta con filtros, asignación y cambio de estado
 - [ ] Categorías configurables por organización
 - [ ] Comentarios públicos e internos

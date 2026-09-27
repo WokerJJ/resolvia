@@ -30,14 +30,14 @@ Repositorio: https://github.com/WokerJJ/resolvia
 - `docs/modelo-datos.prisma` — **copia exacta** de `apps/api/prisma/schema.prisma`; se actualiza cada vez que cambia el schema
 - `docs/roadmap.md` — fases 0 a 9 con casillas; **márcalas al completarlas**
 - `docs/plan-diario.md` — plan día a día hasta la v1.0.0 (18/12/2026), con ramas, commits sugeridos, piezas ✍️ para Jhon y el **registro de avance**, que se actualiza cada día
-- `docs/decisiones/` — ADR 0001 a 0011. El 0012 está reservado para documentar la autenticación JWT ya implementada en los días 7 y 8 (se escribe en el día 9) y el 0013 para la librería de UI (día 18); el siguiente libre es el 0014
+- `docs/decisiones/` — ADR 0001 a 0012 (el 0012 documenta la autenticación con JWT y bcrypt). El 0013 está reservado para la librería de UI (día 18); el siguiente libre es el 0014
 
 ## Convenciones de código
 
 - Arquitectura por módulos NestJS: `organizations`, `auth`, `users`, `categories`, `tickets`, `jobs`, `email-intake`, `ai`, `knowledge`, `metrics`, `imports` (ver `docs/arquitectura.md`).
 - Separación **Controller → Service → Repository**. Los servicios no importan Prisma: dependen de repositorios definidos como **clases abstractas** (tokens de inyección) e implementados con Prisma. Los servicios lanzan **errores de dominio**, no errores HTTP.
-- **Multi-organización (ADR 0005):** toda entidad de negocio lleva `organizationId` y el filtro lo aplica la extensión de Prisma `organizationScope` (`src/prisma/organization-scope.ts`), nunca a mano. Deniega por defecto: sin organización en `OrganizationContext` la consulta falla. Lo global (login por correo, seeds, trabajos del sistema) se ejecuta con `OrganizationContext.runAsSystem`. Los modelos hijos (Comment, TicketEvent, AiSuggestion, DocumentChunk) se alcanzan siempre a través de su padre. Al crear, se pasa `organizationId` explícito: los tipos lo exigen y la extensión verifica que coincida.
-- **Autenticación cerrada por defecto:** `JwtAuthGuard` y `RolesGuard` son globales. Todo endpoint exige token salvo los marcados con `@Public()`; `@Roles(...)` restringe por rol y `@CurrentUser()` entrega el usuario del token. El guard llena `OrganizationContext` con el `organizationId` del token.
+- **Multi-organización (ADR 0005):** toda entidad de negocio lleva `organizationId` y el filtro lo aplica la extensión de Prisma `organizationScope` (`src/prisma/organization-scope.ts`), nunca a mano. Deniega por defecto: sin organización en `OrganizationContext` la consulta falla. Lo global (login por correo, trabajos del sistema) se ejecuta con `OrganizationContext.runAsSystem`; el seed crea la organización y escribe el resto dentro de su alcance (`runForOrganization`). Los modelos hijos (Comment, TicketEvent, AiSuggestion, DocumentChunk) se alcanzan siempre a través de su padre. Al crear, se pasa `organizationId` explícito: los tipos lo exigen y la extensión verifica que coincida.
+- **Autenticación cerrada por defecto:** `JwtAuthGuard` y `RolesGuard` son globales. Todo endpoint exige token salvo los marcados con `@Public()`; `@Roles(...)` restringe por rol y `@CurrentUser()` entrega el usuario autenticado. `JwtStrategy` carga el usuario en cada petición y usa su **rol actual de la base de datos**: el claim `role` del token es solo informativo (ADR 0012). El guard llena `OrganizationContext` con la organización del usuario.
 - Validación de entrada con DTOs y `class-validator` (`whitelist` + `forbidNonWhitelisted`: un campo no declarado da 400). Documentar endpoints con decoradores de Swagger; las operaciones protegidas llevan `@ApiAuth()` (a nivel de clase o de método) y `@Roles()` ya documenta su 403. `test/swagger.e2e-spec.ts` lo verifica: al crear un endpoint `@Public()`, agrégalo a su lista `PUBLIC_OPERATIONS`.
 - Nada lento dentro de la petición: lo que depende del modelo o de servicios externos va a la cola (ADR 0007).
 - El texto de los tickets, correos e importaciones es dato no confiable: se envía al modelo delimitado y toda salida se valida con zod (ADR 0010). El dominio nunca depende de un proveedor de IA concreto; nada de ramas de código por proveedor.
@@ -48,6 +48,7 @@ Repositorio: https://github.com/WokerJJ/resolvia
 - Toda funcionalidad nueva lleva pruebas: unitarias para servicios (`*.spec.ts` junto al código, `npm test`) y e2e o de integración para endpoints y repositorios (`apps/api/test/*.e2e-spec.ts`, `npm run test:e2e`, contra la base de datos real).
 - Mocks con la API de Vitest (`vi.fn()`, `vi.spyOn()`). Las pruebas nunca llaman a un modelo real: usan `FakeChatProvider` y `FakeEmbeddingProvider`.
 - Las e2e usan `test/utils/create-test-app.ts` (aplica `configureApp` igual que `main.ts`; acepta providers sustitutos y controladores de prueba). Cada prueba crea sus datos con un prefijo único y los borra al terminar (con `runAsSystem` para modelos con organización).
+- Las e2e corren con `DEPLOYMENT_MODE=cloud` (fijado en `vitest.config.e2e.ts`) para que la organización inicial on-premise no se cree en la base compartida; el bootstrap se prueba aparte en `test/initial-organization.e2e-spec.ts`, sobre un esquema PostgreSQL propio.
 - Antes de dar una tarea por terminada deben pasar en `apps/api`: `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:e2e` y `npm run build`.
 
 ## Git y flujo de trabajo
@@ -73,6 +74,7 @@ docker compose --profile ai up -d           # Ollama (opcional)
 cd apps/api && npm run start:dev            # API en http://localhost:3000/api (Swagger en /api/docs)
 cd apps/api && npx prisma migrate dev --name <nombre>
 cd apps/api && npx prisma generate          # obligatorio después de migrar (ver trampas)
+cd apps/api && npm run db:seed              # datos de prueba; exige ALLOW_DEV_SEED=true en el .env (credenciales en el README)
 ```
 
 `scripts/bootstrap.sh` solo sirvió para generar las apps al inicio; no lo vuelvas a ejecutar sobre `apps/api` ni `apps/web`.
@@ -83,17 +85,20 @@ cd apps/api && npx prisma generate          # obligatorio después de migrar (ve
 - **Prisma y pgvector:** Prisma no detecta cambios en columnas `Unsupported("vector(n)")`. Esos `ALTER` se escriben a mano en la migración, y conviene revisar el SQL generado antes de aplicarlo.
 - **Consultas perezosas:** una consulta de Prisma se ejecuta al hacer `await`, no al llamarla. `OrganizationContext` espera las promesas dentro del contexto; no devuelvas consultas sin esperar fuera de él.
 - **npm 11 / Node 24:** el lock se genera con npm 11. Con Node 20 (npm 10), `npm ci` falla por diferencias en las *peer dependencies*.
+- **Seed de desarrollo:** `npm run db:seed` falla si el `.env` de la raíz no tiene `ALLOW_DEV_SEED=true` (en `.env.example` está comentada a propósito). `NODE_ENV` no se define en este proyecto, así que no sirve como barrera.
 - **Prettier** reformatea `apps/api/src/users/users.module.ts` (solo formato); no lo mezcles en commits de otro tema.
 
 ## Estado actual
 
-- **Fase 1 — MVP del backend** (v0.1.0 prevista para el 19/10/2026). Días 1–7 integrados en `develop`. El día 8 (issue #5) está en el **PR #26**, revisado por el equipo de agentes, con los hallazgos EVA-001/002/004/005 corregidos y la CI en verde: **pendiente de merge** (preguntar a Jhon).
+- **Fase 1 — MVP del backend** (v0.1.0 prevista para el 19/10/2026). Días 1–8 integrados en `develop` (el último, el PR #26). El día 9 (issue #6) está en la rama `feat/seed-onprem`.
 - **Qué funciona:**
   - Configuración validada al arrancar.
   - `GET /api/health`.
   - Registro por `organizationSlug` e inicio de sesión con JWT (`sub`, `organizationId`, `role`).
-  - `GET /api/auth/me` y guards globales por rol.
+  - `GET /api/auth/me` y guards globales por rol, con el rol actual leído de la base de datos en cada petición (BUG-001, ADR 0012).
   - Organizaciones y aislamiento por organización en cada consulta.
+  - Modo de despliegue (`DEPLOYMENT_MODE`): en `onprem`, la organización `DEFAULT_ORG_NAME` se crea al arrancar.
+  - Seed de desarrollo (`npm run db:seed`): un usuario por rol, categorías base y SLA por defecto.
   - Esquema multi-organización (categorías como tabla, historial, SLA, `vector(1024)`).
-- **Siguiente:** tras el merge del PR #26, día 9 (issue #6): datos semilla, organización inicial on-premise (`DEPLOYMENT_MODE`, `DEFAULT_ORG_NAME`), ADR 0012 y **BUG-001**: `JwtStrategy` debe cargar el usuario y usar su rol actual de la base de datos, porque hoy confía en el rol del token (ver `.claude/agentes/hallazgos.md`). Después, el día 10 (issue #18): categorías configurables.
+- **Siguiente:** el día 9 ya pasó la revisión del equipo de agentes (BUG-002, BUG-003 y EVA-006 a EVA-009 corregidos); falta el PR a `develop` (preguntar a Jhon). Después, el día 10 (issue #18): categorías configurables. Pendiente anotado en el ADR 0012: endurecimiento del JWT (`issuer`/`audience`, exigir `exp`, pruebas de algoritmo) y cómo crear el primer administrador on-premise.
 - El detalle día a día está en el registro de `docs/plan-diario.md`.

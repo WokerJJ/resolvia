@@ -8,7 +8,9 @@ import {
   IsNotEmpty,
   IsString,
   IsUrl,
+  Matches,
   Max,
+  MaxLength,
   Min,
   MinLength,
   ValidateIf,
@@ -19,6 +21,14 @@ import {
 export enum LlmProviderName {
   OpenAICompatible = 'openai-compatible',
   Anthropic = 'anthropic',
+}
+
+/** How the installation is deployed (ADR 0005). */
+export enum DeploymentMode {
+  /** One organization per installation, created on first start. */
+  OnPrem = 'onprem',
+  /** Many isolated organizations in one installation. */
+  Cloud = 'cloud',
 }
 
 /**
@@ -57,6 +67,24 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   JWT_EXPIRES_IN = '1d';
+
+  @IsEnum(DeploymentMode)
+  DEPLOYMENT_MODE = DeploymentMode.OnPrem;
+
+  /**
+   * Name of the organization created on the first start in on-premise mode
+   * (and used by the development seed). Its slug is derived from it, so it
+   * needs at least one letter or digit.
+   */
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsString()
+  @MaxLength(100)
+  @Matches(/[a-z0-9]/i, {
+    message: 'DEFAULT_ORG_NAME must contain at least one letter or digit',
+  })
+  DEFAULT_ORG_NAME = 'Mi organización';
 
   // Chat model. 'openai-compatible' covers OpenAI, Azure OpenAI, Gemini, vLLM, Ollama...
   @IsEnum(LlmProviderName)

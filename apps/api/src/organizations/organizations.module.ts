@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { InitialOrganizationBootstrap } from './initial-organization.bootstrap.js';
 import {
   OrganizationsRepository,
   PrismaOrganizationsRepository,
@@ -8,6 +9,7 @@ import { OrganizationsService } from './organizations.service.js';
 @Module({
   providers: [
     OrganizationsService,
+    InitialOrganizationBootstrap,
     {
       provide: OrganizationsRepository,
       useClass: PrismaOrganizationsRepository,

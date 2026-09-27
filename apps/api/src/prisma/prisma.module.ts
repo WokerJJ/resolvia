@@ -5,6 +5,7 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { EnvironmentVariables } from '../config/env.validation.js';
 import { OrganizationContext } from '../organizations/organization-context.js';
 import { OrganizationContextModule } from '../organizations/organization-context.module.js';
 import { createPrismaService, PrismaService } from './prisma.service.js';
@@ -15,7 +16,14 @@ import { createPrismaService, PrismaService } from './prisma.service.js';
   providers: [
     {
       provide: PrismaService,
-      useFactory: createPrismaService,
+      useFactory: (
+        config: ConfigService<EnvironmentVariables, true>,
+        context: OrganizationContext,
+      ) =>
+        createPrismaService(
+          config.get('DATABASE_URL', { infer: true }),
+          context,
+        ),
       inject: [ConfigService, OrganizationContext],
     },
   ],

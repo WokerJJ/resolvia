@@ -1,4 +1,8 @@
-import { LlmProviderName, validateEnv } from './env.validation.js';
+import {
+  DeploymentMode,
+  LlmProviderName,
+  validateEnv,
+} from './env.validation.js';
 
 const validEnv = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
@@ -14,6 +18,39 @@ describe('validateEnv', () => {
     expect(env.LLM_PROVIDER).toBe(LlmProviderName.OpenAICompatible);
     expect(env.EMBEDDING_MODEL).toBe('bge-m3');
     expect(env.EMBEDDING_DIMENSIONS).toBe(1024);
+    expect(env.DEPLOYMENT_MODE).toBe(DeploymentMode.OnPrem);
+    expect(env.DEFAULT_ORG_NAME).toBe('Mi organización');
+  });
+
+  it('accepts the cloud deployment mode', () => {
+    const env = validateEnv({ ...validEnv, DEPLOYMENT_MODE: 'cloud' });
+
+    expect(env.DEPLOYMENT_MODE).toBe(DeploymentMode.Cloud);
+  });
+
+  it('fails when DEPLOYMENT_MODE is not supported', () => {
+    expect(() =>
+      validateEnv({ ...validEnv, DEPLOYMENT_MODE: 'hybrid' }),
+    ).toThrow(/DEPLOYMENT_MODE/);
+  });
+
+  it('trims DEFAULT_ORG_NAME', () => {
+    const env = validateEnv({
+      ...validEnv,
+      DEFAULT_ORG_NAME: '  Colegio San José  ',
+    });
+
+    expect(env.DEFAULT_ORG_NAME).toBe('Colegio San José');
+  });
+
+  it.each([
+    ['empty', '   '],
+    ['without letters or digits', '---'],
+    ['longer than 100 characters', 'a'.repeat(101)],
+  ])('fails when DEFAULT_ORG_NAME is %s', (_, name) => {
+    expect(() => validateEnv({ ...validEnv, DEFAULT_ORG_NAME: name })).toThrow(
+      /DEFAULT_ORG_NAME/,
+    );
   });
 
   it('converts numeric strings to numbers', () => {

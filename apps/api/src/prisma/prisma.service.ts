@@ -1,6 +1,4 @@
-import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
-import type { EnvironmentVariables } from '../config/env.validation.js';
 import { PrismaClient } from '../generated/prisma/client.js';
 import type { OrganizationContext } from '../organizations/organization-context.js';
 import { organizationScope } from './organization-scope.js';
@@ -14,15 +12,17 @@ import { organizationScope } from './organization-scope.js';
  */
 export abstract class PrismaService extends PrismaClient {}
 
+/**
+ * Builds the client used by the app and by scripts outside Nest (the seed),
+ * so both apply the same organization filter.
+ */
 export function createPrismaService(
-  config: ConfigService<EnvironmentVariables, true>,
+  databaseUrl: string,
   context: OrganizationContext,
 ): PrismaService {
   // Prisma 7 connects through a driver adapter instead of its own engine.
   const client = new PrismaClient({
-    adapter: new PrismaPg({
-      connectionString: config.get('DATABASE_URL', { infer: true }),
-    }),
+    adapter: new PrismaPg({ connectionString: databaseUrl }),
   });
 
   // Query extensions change behavior, not types: the extended client exposes

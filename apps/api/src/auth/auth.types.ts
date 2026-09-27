@@ -4,6 +4,7 @@ import type { Role, User } from '../users/user.types.js';
 export interface JwtPayload {
   sub: string; // user id
   organizationId: string;
+  /** Informative only: authorization uses the role in the database (ADR 0012). */
   role: Role;
 }
 
@@ -28,7 +29,10 @@ export class InvalidCredentialsError extends Error {
   }
 }
 
-/** The caller of a request, taken from a valid access token (no database hit). */
+/**
+ * The caller of a request: the user of a valid access token, with the role
+ * currently stored in the database (JwtStrategy reloads it on every request).
+ */
 export interface AuthenticatedUser {
   id: string;
   organizationId: string;
